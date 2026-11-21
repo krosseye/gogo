@@ -1,5 +1,6 @@
 import datetime
 import logging
+from collections.abc import Callable
 from typing import Any, NamedTuple, cast
 
 from PySide6.QtCore import QCoreApplication, QSettings, QThread
@@ -58,6 +59,14 @@ class StatsManager:
         if not cls._get_date(settings, "stats/first_opened"):
             logger.info("First time opening the app! Welcome!")
             cls._save_date(settings, "stats/first_opened", today)
+
+        cls.update_streak()
+
+    @classmethod
+    def update_streak(cls) -> None:
+        """Extend or reset the daily streak. Safe to call repeatedly."""
+        settings = cls._get_settings()
+        today = datetime.date.today()
 
         last_date = cls._get_date(settings, "stats/last_date")
         current_streak = cls._get_int(settings, "stats/current_streak")
@@ -135,14 +144,27 @@ class StatsManager:
         return milestones[streak // 10]
 
 
-class AppOpenWorker(QThread):
+class _StatsWorker(QThread):
+    def __init__(self, fn: Callable[[], None]) -> None:
+        super().__init__()
+        self._fn = fn
+
     def run(self) -> None:
-        StatsManager.track_app_open()
+        self._fn()
 
 
 def track_app_open_async() -> None:
-    """Track an app open off the UI thread."""
-    worker = AppOpenWorker()
+    """Count an app open off the UI thread. Call once per launch."""
+    _run_async(StatsManager.track_app_open)
+
+
+def update_streak_async() -> None:
+    """Update the streak off the UI thread, e.g. from a timer."""
+    _run_async(StatsManager.update_streak)
+
+
+def _run_async(fn: Callable[[], None]) -> None:
+    worker = _StatsWorker(fn)
     if app := QCoreApplication.instance():
         worker.setParent(app)
     worker.finished.connect(worker.deleteLater)

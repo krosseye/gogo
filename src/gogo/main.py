@@ -43,12 +43,12 @@ def setup_logging() -> None:
 
 def setup_usage_stats(app) -> None:
     """Configures usage stats tracking."""
-    from gogo.core.stats import track_app_open_async
+    from gogo.core.stats import track_app_open_async, update_streak_async
 
     track_app_open_async()
 
     streak_timer = QTimer(app)
-    streak_timer.timeout.connect(track_app_open_async)
+    streak_timer.timeout.connect(update_streak_async)
     streak_timer.start(constants.USAGE_STREAK_TIMEOUT * 60 * 1000)
 
 
