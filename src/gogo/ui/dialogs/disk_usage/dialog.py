@@ -4,7 +4,7 @@ from pathlib import Path
 from godotkit.project.parse import read as read_project_config
 from kq_icon_engine import IconStyle, KQIcon
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QPixmap, QResizeEvent
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
@@ -16,13 +16,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gogo.ui.components.sliding_label import SlidingLabel
+from gogo.ui.components.elided_label import ElidedLabel
 from gogo.ui.graphics.icon_generator import IconGenerator
 
 from .chart_widget import ChartWidget
 from .file_list_widget import FileListWidget
 from .scanner import ProjectScanner
-from .utils import format_bytes
+from .utils import format_bytes, plural
 
 
 class ProjectDiskUsageDialog(QDialog):
@@ -56,7 +56,7 @@ class ProjectDiskUsageDialog(QDialog):
         QTimer.singleShot(500, self._start_scan)
 
     def _setup_window(self):
-        self.setWindowTitle("Project Disk Usage")
+        self.setWindowTitle(f"{self._project_name} - Disk Usage")
         self.setMinimumSize(*self.MINIMUM_SIZE)
         self.resize(850, 600)
 
@@ -94,7 +94,7 @@ class ProjectDiskUsageDialog(QDialog):
 
         icon_label = QLabel()
         if isinstance(icon, str):
-            pixmap = KQIcon(icon, style=IconStyle.BOLD).pixmap(size)
+            pixmap = KQIcon(icon, style=IconStyle.REGULAR).pixmap(size)
         else:
             pixmap = icon
 
@@ -118,7 +118,7 @@ class ProjectDiskUsageDialog(QDialog):
         container.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Raised)
         layout = QVBoxLayout(container)
 
-        title_label = QLabel(f"<h2>{self._project_name} Disk Usage</h2>")
+        title_label = QLabel(f"<h2>{self._project_name}</h2>")
         title_label.setWordWrap(True)
         layout.addLayout(
             self._create_labeled_row(self.project_icon, title_label, size=32)
@@ -129,8 +129,7 @@ class ProjectDiskUsageDialog(QDialog):
             branch_label = QLabel(f"<b>Active branch:</b> <i>{branch}</i>")
             layout.addLayout(self._create_labeled_row("git-branch", branch_label))
 
-        self.path_label = SlidingLabel(str(self._project_path))
-        self.path_label.setStyleSheet("font-family: 'JetBrains Mono'; color: grey;")
+        self.path_label = ElidedLabel(str(self._project_path))
         layout.addLayout(self._create_labeled_row("folder", self.path_label))
 
         return container
@@ -153,10 +152,6 @@ class ProjectDiskUsageDialog(QDialog):
 
         head = head_file.read_text().strip()
         return head.split("/")[-1] if head.startswith("ref:") else head[:7]
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        self.path_label.set_max_width(self.width() * 0.55)
 
     def _create_footer_section(self) -> QWidget:
         container = QWidget()
@@ -224,7 +219,7 @@ class ProjectDiskUsageDialog(QDialog):
         total_size, _ = self._chart_widget.get_display_totals()
         percent = (size / total_size * 100) if total_size > 0 else 0
         self._summary_label.setText(
-            f"<b>{label}</b>: {format_bytes(size)} ({percent:.1f}%) &nbsp;|&nbsp; {count} files"
+            f"<b>{label}</b>: {format_bytes(size)} ({percent:.1f}%) &nbsp;|&nbsp; {plural(count, 'file')}"
         )
 
     def _on_category_selected(self, category: str | None):

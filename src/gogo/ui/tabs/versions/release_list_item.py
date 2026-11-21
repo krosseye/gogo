@@ -1,5 +1,6 @@
 import webbrowser
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
@@ -11,6 +12,7 @@ from PySide6.QtGui import (
     QContextMenuEvent,
     QIcon,
     QMouseEvent,
+    QPalette,
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
@@ -25,8 +27,8 @@ from PySide6.QtWidgets import (
 
 from gogo.core import engines, launcher, paths
 from gogo.ui.busy import busy_until_app_inactive
+from gogo.ui.components.elided_label import ElidedLabel
 from gogo.ui.components.emblem_widget import EmblemWidget
-from gogo.ui.components.sliding_label import SlidingLabel
 from gogo.ui.dialogs.install_engine import install_engine, install_events
 from gogo.ui.graphics.icon_generator import IconGenerator
 
@@ -54,6 +56,7 @@ class ReleaseListItem(QWidget):
         source: str,
         size_bytes: int,
         on_change: Callable[[], None],
+        published_at: str | None = None,
     ) -> None:
         super().__init__()
         self.version = version
@@ -61,6 +64,7 @@ class ReleaseListItem(QWidget):
         self.on_change = on_change
         self.is_remote = source.startswith("http")
         self.title = str(version)
+        self.published_at = published_at
 
         if self.is_remote:
             self.is_installed = (paths.versions_dir() / self.title).exists()
@@ -75,7 +79,9 @@ class ReleaseListItem(QWidget):
         version_label = QLabel(f"<h3>{self.title}</h3>")
         version_label.setToolTip("Version")
         details_layout.addWidget(version_label)
-        details_layout.addLayout(self._create_source_layout())
+        source_layout = self._create_source_layout()
+        if source_layout:
+            details_layout.addLayout(source_layout)
         if size_bytes:
             details_layout.addLayout(self._create_size_layout(size_bytes))
 
@@ -83,8 +89,7 @@ class ReleaseListItem(QWidget):
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.addWidget(self._create_icon_label())
-        main_layout.addLayout(details_layout)
-        main_layout.addStretch()
+        main_layout.addLayout(details_layout, 1)
         main_layout.addLayout(self._create_meta_layout())
 
     def _create_icon_label(self) -> QLabel:
@@ -101,26 +106,33 @@ class ReleaseListItem(QWidget):
         )
         return icon_label
 
-    def _create_source_layout(self) -> QHBoxLayout:
-        self.source_label = SlidingLabel(self.source)
-        self.source_label.setToolTip(
-            "Download URL" if self.is_remote else "Install folder"
-        )
-        self.source_label.set_max_width(self.width() / 2)
-
-        icon_name = "emblem-symbolic-link" if self.is_remote else "folder-open"
-        icon_label = QLabel(pixmap=QIcon.fromTheme(icon_name).pixmap(16, 16))
+    def _create_source_layout(self) -> QHBoxLayout | None:
+        """Release date for downloads, install folder for installed engines."""
+        if self.is_remote:
+            try:
+                published = datetime.fromisoformat(self.published_at)  # type: ignore[arg-type]
+            except (TypeError, ValueError):
+                return None
+            label = QLabel(f"Released {published:%d %b %Y}")
+            label.setForegroundRole(QPalette.ColorRole.PlaceholderText)
+            icon_label = QLabel(
+                pixmap=KQIcon("calendar-blank", style=IconStyle.REGULAR).pixmap(16)
+            )
+        else:
+            label = self.path_label = ElidedLabel(self.source)
+            icon_label = QLabel(pixmap=QIcon.fromTheme("folder-open").pixmap(16, 16))
         icon_label.setStyleSheet("QLabel { padding-right: 4px; }")
 
         layout = QHBoxLayout()
         layout.addWidget(icon_label)
-        layout.addWidget(self.source_label)
+        layout.addWidget(label)
+        layout.addStretch(1)
         return layout
 
     def _create_size_layout(self, size_bytes: int) -> QHBoxLayout:
         icon_label = QLabel()
         icon_name = "file-zip" if self.is_remote else "disc"
-        icon_label.setPixmap(KQIcon(icon_name, style=IconStyle.BOLD).pixmap(16))
+        icon_label.setPixmap(KQIcon(icon_name, style=IconStyle.REGULAR).pixmap(16))
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label.setFixedWidth(16)
         icon_label.setStyleSheet("QLabel { padding-right: 4px; }")
@@ -285,4 +297,5 @@ class ReleaseListItem(QWidget):
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self.source_label.set_max_width(self.width() / 2)
+        if hasattr(self, "path_label"):
+            self.path_label.setFixedWidth(int(self.width() * 0.5))

@@ -53,8 +53,8 @@ class ProjectConfigGroup(QGroupBox):
         else:
             self._git_checkbox.setChecked(True)
 
-        form_layout.addRow("<b>Location:</b>", location_layout)
-        form_layout.addRow("<b>Godot Version:</b>", self._version_combo)
+        form_layout.addRow("Location:", location_layout)
+        form_layout.addRow("Godot version:", self._version_combo)
         form_layout.addRow(self._git_checkbox)
 
     def _load_defaults(self) -> None:

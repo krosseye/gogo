@@ -3,6 +3,7 @@ import unicodedata
 
 from kq_icon_engine import IconStyle, KQIcon
 from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -53,7 +54,7 @@ class ProjectDetailsGroup(QGroupBox):
         self._name_edit.textChanged.connect(self._on_name_changed)
 
         generate_btn = QPushButton()
-        generate_btn.setIcon(KQIcon("dice-five", style=IconStyle.BOLD))
+        generate_btn.setIcon(KQIcon("dice-five", style=IconStyle.REGULAR))
         generate_btn.setToolTip("Generate a random project name")
         generate_btn.setIconSize(QSize(16, 16))
         generate_btn.setFixedSize(24, 24)
@@ -64,15 +65,15 @@ class ProjectDetailsGroup(QGroupBox):
         name_layout.addWidget(generate_btn)
 
         self._folder_preview_label = QLabel()
-        self._folder_preview_label.setStyleSheet("color: gray; font-family: monospace;")
+        self._folder_preview_label.setForegroundRole(QPalette.ColorRole.PlaceholderText)
 
         self._description_edit = QPlainTextEdit()
         self._description_edit.setPlaceholderText("A short description of the project")
         self._description_edit.setFixedHeight(80)
 
-        form_layout.addRow("<b>Name:</b>", name_layout)
-        form_layout.addRow("<b>Preview:</b>", self._folder_preview_label)
-        form_layout.addRow("<b>Description:</b>", self._description_edit)
+        form_layout.addRow("Name:", name_layout)
+        form_layout.addRow("Preview:", self._folder_preview_label)
+        form_layout.addRow("Description:", self._description_edit)
 
         self._icon_preview = QLabel()
         self._icon_preview.setFixedSize(96, 96)

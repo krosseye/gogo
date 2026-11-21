@@ -118,10 +118,12 @@ class ConsoleTabContent(QWidget):
         self.session_combo.setMinimumContentsLength(24)
         self.session_combo.setFixedHeight(32)
         self.session_combo.setToolTip("Launch session")
+        self.session_combo.setPlaceholderText("No sessions yet")
+        self.session_combo.setEnabled(False)
         self.session_combo.currentIndexChanged.connect(self._on_session_changed)
 
         self.options_btn = QPushButton("Options  ")
-        self.options_btn.setIcon(KQIcon("funnel", style=IconStyle.BOLD))
+        self.options_btn.setIcon(KQIcon("funnel", style=IconStyle.REGULAR))
         self.options_btn.setFixedHeight(32)
         menu = QMenu(self)
         self.auto_scroll_action = menu.addAction("Auto-Scroll")
@@ -139,10 +141,7 @@ class ConsoleTabContent(QWidget):
         wrap_action.setChecked(True)
         menu.addSeparator()
         menu.addAction("Clear View", self._clear_view)
-        menu.addAction(
-            "Open Logs Folder",
-            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(paths.logs_dir()))),
-        )
+        menu.addAction("Open Logs Folder", self._open_logs_folder)
         self.options_btn.setMenu(menu)
 
         self._update_stats()
@@ -158,6 +157,12 @@ class ConsoleTabContent(QWidget):
             self._refresh_sessions(follow_newest=is_new_launch)
         self._read_new_output()
 
+    @staticmethod
+    def _open_logs_folder() -> None:
+        logs_dir = paths.logs_dir()
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(logs_dir)))
+
     def _refresh_sessions(self, follow_newest: bool) -> None:
         current = self._log_path
         self.session_combo.blockSignals(True)
@@ -170,6 +175,7 @@ class ConsoleTabContent(QWidget):
             else self.session_combo.findData(current)
         )
         self.session_combo.setCurrentIndex(max(index, 0))
+        self.session_combo.setEnabled(bool(self._known_logs))
         self.session_combo.blockSignals(False)
         self._on_session_changed()
 

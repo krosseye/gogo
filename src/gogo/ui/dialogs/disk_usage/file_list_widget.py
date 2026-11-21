@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 
 from gogo.ui.components.placeholder_widget import PlaceholderWidget
 
-from .utils import format_bytes
+from .utils import format_bytes, plural
 
 
 class FileListWidget(QWidget):
@@ -91,7 +91,7 @@ class FileListWidget(QWidget):
         readable_size = format_bytes(stats["size"])
         count = stats["count"]
         self._summary_label.setText(
-            f"<h3>{category}</h3> {count} files &nbsp;|&nbsp; {readable_size}"
+            f"<h3>{category}</h3> {plural(count, 'file')} &nbsp;|&nbsp; {readable_size}"
         )
 
         files = stats.get("files", [])
@@ -117,9 +117,7 @@ class FileListWidget(QWidget):
                 size_item.setEditable(False)
 
                 rel_path = os.path.relpath(p.parent, self._project_path)
-                path_item = QStandardItem(
-                    f".{os.sep}{rel_path}" if rel_path != "." else f".{os.sep}"
-                )
+                path_item = QStandardItem("" if rel_path == "." else rel_path)
                 path_item.setForeground(
                     QApplication.palette().color(QPalette.ColorRole.PlaceholderText)
                 )

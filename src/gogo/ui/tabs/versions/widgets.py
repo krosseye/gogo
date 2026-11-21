@@ -108,7 +108,11 @@ class OnlineReleasesList(QListWidget):
             size = download.get("size", 0)
 
             item_widget = ReleaseListItem(
-                GodotVersion.from_url(url), url, size, self.on_change
+                GodotVersion.from_url(url),
+                url,
+                size,
+                self.on_change,
+                release.get("published_at"),
             )
             item = QListWidgetItem()
             item.setSizeHint(item_widget.sizeHint())
@@ -143,7 +147,7 @@ class VersionsTabContent(QWidget):
         self.release_limit.setValue(self.ctrl.DEFAULT_LIMIT)
 
         self.fetch_button = QPushButton()
-        self.fetch_button.setIcon(KQIcon("arrows-clockwise", style=IconStyle.BOLD))
+        self.fetch_button.setIcon(KQIcon("arrows-clockwise", style=IconStyle.REGULAR))
         self.fetch_button.setIconSize(QSize(24, 24))
         self.fetch_button.setFixedSize(QSize(32, 32))
         self.fetch_button.clicked.connect(self.populate_lists)
@@ -194,7 +198,7 @@ class VersionsTabContent(QWidget):
     def create_tools(self):
         """Titlebar widgets: the filters menu and the refresh button."""
         self.filters_button = QPushButton("Filters  ")
-        self.filters_button.setIcon(KQIcon("funnel", style=IconStyle.BOLD))
+        self.filters_button.setIcon(KQIcon("funnel", style=IconStyle.REGULAR))
         self.filters_button.setFixedHeight(32)
 
         self.options_menu = QMenu()

@@ -21,7 +21,7 @@ from gogo.core.config import config
 TARGET_WIDTH_RATIO = 2.5
 TARGET_HEIGHT_RATIO = 2.0
 MAX_SIZE_RATIO = 0.9
-MIN_WIDTH, MIN_HEIGHT = 580, 500
+MIN_WIDTH, MIN_HEIGHT = 590, 500
 
 
 def setup_metadata() -> None:

@@ -100,7 +100,7 @@ class ProjectsTabContent(QFrame):
 
     def _setup_buttons(self) -> None:
         def _create_button(icon_name: str, tooltip: str, callback):
-            button = QPushButton(KQIcon(icon_name, style=IconStyle.BOLD), "")
+            button = QPushButton(KQIcon(icon_name, style=IconStyle.REGULAR), "")
             button.setToolTip(tooltip)
             button.setIconSize(QSize(24, 24))
             button.setFixedSize(QSize(32, 32))

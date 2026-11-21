@@ -26,7 +26,7 @@ class Tab(QWidget):
         self.tab_content = tab_content
         self.nav_button = create_nav_button(title, icon_normal, icon_selected)
 
-        self.titlebar = TitleBar(title, icon_normal, children=toolbar_items)
+        self.titlebar = TitleBar(title, children=toolbar_items)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

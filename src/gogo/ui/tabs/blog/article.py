@@ -221,11 +221,7 @@ class RSSCard(_ArticleWidget):
         return round(image_width * 9 / 16)
 
     def _title_height(self, image_width: int) -> int:
-        line = self.title_label.fontMetrics().lineSpacing()
-        needed = self.title_label.heightForWidth(image_width)
-        if needed <= 0:
-            needed = line + 2
-        return min(needed, line * 2 + 2)
+        return self.title_label.fontMetrics().lineSpacing() * 2 + 2
 
     def _summary_height(self, image_width: int) -> int:
         line = self.summary_label.fontMetrics().lineSpacing()

@@ -73,7 +73,7 @@ class BaseSettingField(ABC):
 
     def create_reset_button(self) -> QPushButton:
         btn = QPushButton()
-        btn.setIcon(KQIcon("arrow-counter-clockwise", style=IconStyle.BOLD))
+        btn.setIcon(KQIcon("arrow-counter-clockwise", style=IconStyle.REGULAR))
         btn.setIconSize(QSize(16, 16))
         btn.setFixedSize(24, 24)
         btn.setToolTip(f"Reset {self.label.lower().rstrip(':')} to default")
@@ -133,23 +133,28 @@ class ComboBoxField(BaseSettingField):
         options: list[str],
         tooltip: str | None = None,
         group: str = "General",
+        display_names: dict[str, str] | None = None,
     ):
         super().__init__(key, label, default, tooltip, group)
         self.options = options
+        self.display_names = display_names or {}
 
     def create_widget(self) -> QComboBox:
         combo = QComboBox()
-        combo.addItems(self.options)
+        for option in self.options:
+            combo.addItem(self.display_names.get(option, option), option)
         return combo
 
     def get_value(self) -> str:
-        return self.widget.currentText()
+        return self.widget.currentData()
 
     def set_value(self, value: str) -> None:
-        self.widget.setCurrentText(value)
+        index = self.widget.findData(value)
+        if index != -1:
+            self.widget.setCurrentIndex(index)
 
     def connect_change_signal(self, callback) -> None:
-        self.widget.currentTextChanged.connect(callback)
+        self.widget.currentIndexChanged.connect(callback)
 
 
 class FontComboField(BaseSettingField):
@@ -275,6 +280,7 @@ class SettingsTabContent(QWidget):
                 label="Theme:",
                 default=config.default_config["theme"],
                 options=THEME_OPTIONS,
+                display_names={"default": "Default"},
                 tooltip="Select the application theme",
                 group="Appearance",
             ),
@@ -418,6 +424,10 @@ class SettingsTabContent(QWidget):
         current = config.copy()
         has_changes = any(field.has_changed(current) for field in self.fields)
         self.apply_button.setEnabled(has_changes)
+        for field in self.fields:
+            field.reset_btn.setEnabled(
+                not field.locked and field.get_value() != field.default
+            )
 
     def _apply_changes(self):
         """Validate, save, and apply what can be applied live."""

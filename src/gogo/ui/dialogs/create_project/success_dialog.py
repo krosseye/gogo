@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from gogo.ui.components.sliding_label import SlidingLabel
+from gogo.ui.components.elided_label import ElidedLabel
 
 
 class ProjectCreatedDialog(QDialog):
@@ -42,10 +42,8 @@ class ProjectCreatedDialog(QDialog):
         self.title_label = QLabel(f"Created <b>{project_name}</b>.")
         self.title_label.setWordWrap(True)
 
-        self.path_label = SlidingLabel()
-        self.path_label.setFixedWidth(250)
-        self.path_label.setStyleSheet("color: #888;")
-        self.path_label.setText(project_path)
+        self.path_label = ElidedLabel(project_path)
+        self.path_label.setMinimumWidth(250)
 
         self.text_container.addWidget(self.title_label)
         self.text_container.addWidget(QLabel("Location:"))

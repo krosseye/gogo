@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         self.navbar.add_tab(
             Tab(
                 "Projects",
-                KQIcon("folders", style=IconStyle.BOLD),
+                KQIcon("folders", style=IconStyle.REGULAR),
                 KQIcon("folders", style=IconStyle.FILL),
                 projects_tab_content,
                 projects_tab_content.create_tools(),
@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         self.navbar.add_tab(
             Tab(
                 "Versions",
-                KQIcon("package", style=IconStyle.BOLD),
+                KQIcon("package", style=IconStyle.REGULAR),
                 KQIcon("package", style=IconStyle.FILL),
                 versions_tab_content,
                 versions_tab_content.create_tools(),
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         self.navbar.add_tab(
             Tab(
                 "Blog",
-                KQIcon("newspaper", style=IconStyle.BOLD),
+                KQIcon("newspaper", style=IconStyle.REGULAR),
                 KQIcon("newspaper", style=IconStyle.FILL),
                 BlogTabContent(self),
             )
@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
         self.navbar.add_tab(
             Tab(
                 "Console",
-                KQIcon("terminal-window", style=IconStyle.BOLD),
+                KQIcon("terminal-window", style=IconStyle.REGULAR),
                 KQIcon("terminal-window", style=IconStyle.FILL),
                 console_tab_content,
                 console_tab_content.create_tools(),
@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
         self.navbar.add_tab(
             Tab(
                 "Settings",
-                KQIcon("gear", style=IconStyle.BOLD),
+                KQIcon("gear", style=IconStyle.REGULAR),
                 KQIcon("gear", style=IconStyle.FILL),
                 settings_tab_content,
                 [settings_tab_content.apply_button],

@@ -3,7 +3,7 @@ from pathlib import Path
 from godotkit.engine import GodotVersion
 from godotkit.project import GodotProject
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPalette, QPixmap
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -80,7 +80,7 @@ class ProjectPropertiesDialog(QDialog):
         self.icon_label.setStyleSheet(
             """
             #IconPreviewLabel {
-                border: 2px dashed #aaa;
+                border: 2px dashed #ccc;
                 border-radius: 8px;
                 background-color: palette(base);
             }
@@ -95,7 +95,7 @@ class ProjectPropertiesDialog(QDialog):
         self.icon_path_label = QLabel("No icon selected")
         self.icon_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.icon_path_label.setWordWrap(True)
-        self.icon_path_label.setStyleSheet("color: gray;")
+        self.icon_path_label.setForegroundRole(QPalette.ColorRole.PlaceholderText)
 
         icon_layout.addWidget(self.icon_label)
         icon_layout.addWidget(self.icon_path_label)
@@ -120,11 +120,11 @@ class ProjectPropertiesDialog(QDialog):
 
         self.tags_edit = TagEditor(parent=self)
 
-        form_layout.addRow("<b>Name</b>", self.name_edit)
-        form_layout.addRow("<b>Version</b>", self.version_edit)
-        form_layout.addRow("<b>Engine Version</b>", self.engine_version_selector)
-        form_layout.addRow("<b>Description</b>", self.description_edit)
-        form_layout.addRow("<b>Tags</b>", self.tags_edit)
+        form_layout.addRow("Name:", self.name_edit)
+        form_layout.addRow("Version:", self.version_edit)
+        form_layout.addRow("Engine version:", self.engine_version_selector)
+        form_layout.addRow("Description:", self.description_edit)
+        form_layout.addRow("Tags:", self.tags_edit)
 
         details_layout.addLayout(form_layout)
 

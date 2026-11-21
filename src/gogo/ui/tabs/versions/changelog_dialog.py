@@ -8,6 +8,7 @@ from PySide6.QtGui import (
     QFontMetrics,
     QIcon,
     QKeySequence,
+    QPalette,
     QShortcut,
     QTextCursor,
     QTextDocument,
@@ -135,7 +136,8 @@ class ChangelogDialog(QDialog):
 
     def _create_results_label(self) -> QLabel:
         label = QLabel(NO_RESULTS_TEXT)
-        label.setStyleSheet("color: gray; margin-left: 5px; margin-right: 5px;")
+        label.setForegroundRole(QPalette.ColorRole.PlaceholderText)
+        label.setContentsMargins(5, 0, 5, 0)
         metrics = QFontMetrics(label.font())
         width = metrics.horizontalAdvance(LONGEST_RESULT_STRING)
         label.setFixedWidth(width)
@@ -183,7 +185,7 @@ class ChangelogDialog(QDialog):
         styled_html = f"""
         <body>
             <style>
-                code {{ background-color: rgba(255, 255, 255, 0.1); font-family: monospace; }}
+                code {{ background-color: rgba(128, 128, 128, 0.15); font-family: monospace; }}
             </style>
             {html}
         </body>

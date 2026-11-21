@@ -2,7 +2,7 @@ from godotkit import project as gdk_project
 from godotkit.engine import GodotVersion
 from godotkit.project import GodotProject
 from kq_icon_engine import FillMode, IconStyle, KQCustomIcon, KQIcon
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QColor, QContextMenuEvent, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QSizePolicy,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -20,6 +21,7 @@ from gogo.core.config import config
 from gogo.core.constants import GODOT_ICON_PATH
 from gogo.core.stats import StatsManager
 from gogo.ui.busy import busy_until_app_inactive
+from gogo.ui.components.elided_label import ElidedLabel
 from gogo.ui.components.emblem_widget import EmblemWidget
 from gogo.ui.components.sliding_label import SlidingLabel
 from gogo.ui.components.version_selector import choose_engine_version
@@ -59,9 +61,16 @@ class ProjectListItem(QWidget):
 
         self.meta_layout = self._create_meta_layout()
 
+        inset = (
+            self.fav_button.sizeHint().width() - self.fav_button.iconSize().width()
+        ) // 2
+        m = self.main_layout.contentsMargins()
+        self.main_layout.setContentsMargins(
+            max(0, m.left() - inset), m.top(), m.right(), m.bottom()
+        )
+        self.main_layout.addWidget(self.fav_button)
         self.main_layout.addWidget(self.icon_label)
-        self.main_layout.addLayout(details_layout)
-        self.main_layout.addStretch()
+        self.main_layout.addLayout(details_layout, 1)
         self.main_layout.addLayout(self.meta_layout)
 
         self.setLayout(self.main_layout)
@@ -116,13 +125,9 @@ class ProjectListItem(QWidget):
         folder_icon.setStyleSheet("QLabel { padding-right: 4px; }")
         path_layout.addWidget(folder_icon)
 
-        self.path_label = SlidingLabel(str(self.project.file_path))
-        self.path_label.set_max_width(self.width() / 2 if self.width() > 0 else 200)
-        self.path_label.setSizePolicy(
-            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
-        )
-        self.path_label.setToolTip("Project path")
+        self.path_label = ElidedLabel(str(self.project.file_path))
         path_layout.addWidget(self.path_label)
+        path_layout.addStretch(1)
 
         return path_layout
 
@@ -140,12 +145,15 @@ class ProjectListItem(QWidget):
         self.version_emblem.setToolTip("Preferred engine version")
         meta_layout.addWidget(self.version_emblem)
 
-        fav_pixmap = KQIcon(
-            "heart", QColor("red"), IconStyle.FILL, FillMode.GRADIENT
-        ).pixmap(18)
-        self.fav_emblem = EmblemWidget("Favourite", fav_pixmap)
-        self.fav_emblem.setVisible(self.is_favourite)
-        meta_layout.addWidget(self.fav_emblem)
+        self._fav_icons = (
+            KQIcon("heart", style=IconStyle.REGULAR),
+            KQIcon("heart", QColor("red"), IconStyle.FILL, FillMode.GRADIENT),
+        )
+        self.fav_button = QToolButton()
+        self.fav_button.setIconSize(QSize(18, 18))
+        self.fav_button.setAutoRaise(True)
+        self.fav_button.clicked.connect(self._toggle_favourite)
+        self._sync_fav_button()
 
         return meta_layout
 
@@ -257,7 +265,7 @@ class ProjectListItem(QWidget):
 
         forget_action = menu.addAction("Forget Project...")
         forget_action.setToolTip("Remove from the list. Files stay on disk.")
-        forget_action.setIcon(KQIcon("folder-minus", style=IconStyle.BOLD).pixmap(24))
+        forget_action.setIcon(KQIcon("eye-slash", style=IconStyle.REGULAR).pixmap(24))
         forget_action.triggered.connect(self.forget_requested.emit)
 
         menu.addSeparator()
@@ -271,16 +279,16 @@ class ProjectListItem(QWidget):
         menu.addSeparator()
 
         tools_menu = menu.addMenu(
-            KQIcon("wrench", style=IconStyle.BOLD).pixmap(24), "Tools"
+            KQIcon("wrench", style=IconStyle.REGULAR).pixmap(24), "Tools"
         )
 
         project_properties_action = tools_menu.addAction(
-            KQIcon("gear", style=IconStyle.BOLD).pixmap(24), "Project Properties..."
+            KQIcon("gear", style=IconStyle.REGULAR).pixmap(24), "Project Properties..."
         )
         project_properties_action.triggered.connect(self._show_project_properties)
 
         disk_usage_action = tools_menu.addAction(
-            KQIcon("chart-pie", style=IconStyle.BOLD).pixmap(24), "Disk Usage..."
+            KQIcon("chart-pie", style=IconStyle.REGULAR).pixmap(24), "Disk Usage..."
         )
         disk_usage_action.triggered.connect(self._show_disk_usage)
 
@@ -297,7 +305,13 @@ class ProjectListItem(QWidget):
         version_pixmap = IconGenerator.get_version_pin(version_string)
         self.version_emblem.set_content(version_string, version_pixmap)
 
-        self.fav_emblem.setVisible(self.is_favourite)
+        self._sync_fav_button()
+
+    def _sync_fav_button(self):
+        self.fav_button.setIcon(self._fav_icons[self.is_favourite])
+        text = "Remove from Favourites" if self.is_favourite else "Add to Favourites"
+        self.fav_button.setToolTip(text)
+        self.fav_button.setAccessibleName(text)
 
     def _refresh_ui(self):
         self.name_label.setText(f"<h3>{self.project.name}</h3>")
@@ -313,7 +327,7 @@ class ProjectListItem(QWidget):
     def _toggle_favourite(self):
         self.is_favourite = not self.is_favourite
         projects.set_favourite(self.project.dir_path, self.is_favourite)
-        self.fav_emblem.setVisible(self.is_favourite)
+        self._sync_fav_button()
         self.favourite_toggled.emit()
 
     def _add_copy_action(self, menu: QMenu, text: str, path_to_copy: str):
@@ -325,7 +339,6 @@ class ProjectListItem(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if hasattr(self, "path_label"):
-            self.path_label.set_max_width(self.width() * 0.5)
         if hasattr(self, "desc_label"):
             self.desc_label.set_max_width(self.width() * 0.5)
+            self.path_label.setFixedWidth(int(self.width() * 0.5))
