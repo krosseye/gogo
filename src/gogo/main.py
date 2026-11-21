@@ -93,9 +93,6 @@ def create_main_window(app: QApplication) -> QMainWindow:
 
 def main() -> None:
     setup_metadata()
-
-    app = QApplication(sys.argv)
-
     config.set_config_file(get_config_path())
 
     if len(sys.argv) > 1:
@@ -107,6 +104,7 @@ def main() -> None:
         cli_app(sys.argv[1:])
         sys.exit(0)
 
+    app = QApplication(sys.argv)
     setup_logging()
     setup_usage_stats(app)
 
