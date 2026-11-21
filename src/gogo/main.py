@@ -105,6 +105,14 @@ def main() -> None:
         sys.exit(0)
 
     app = QApplication(sys.argv)
+
+    if sys.platform == "win32":
+        from PySide6.QtNetwork import QSslSocket
+
+        # Qt's OpenSSL backend can load a different libssl-3-x64.dll than Python's ssl and segfault.
+        # Set after QApplication exists, or Qt logs a nullptr connect warning.
+        QSslSocket.setActiveBackend("schannel")
+
     setup_logging()
     setup_usage_stats(app)
 
