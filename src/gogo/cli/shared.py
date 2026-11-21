@@ -1,9 +1,12 @@
 from collections.abc import Iterable, Sequence
+from typing import NoReturn
 
+import typer
 from rich.console import Console
 from rich.table import Table
 
 console = Console()
+err_console = Console(stderr=True)
 
 
 def print_success(message: str) -> None:
@@ -11,11 +14,12 @@ def print_success(message: str) -> None:
 
 
 def print_warning(message: str) -> None:
-    console.print(f"[yellow]Warning:[/yellow] {message}")
+    err_console.print(f"[yellow]Warning:[/yellow] {message}")
 
 
-def print_error(message: str) -> None:
-    console.print(f"[red]Error:[/red] {message}")
+def print_error(message: str) -> NoReturn:
+    err_console.print(f"[red]Error:[/red] {message}")
+    raise typer.Exit(1)
 
 
 def build_table(

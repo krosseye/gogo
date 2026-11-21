@@ -94,23 +94,19 @@ def engine_start(
 
     if not target:
         print_error("No engine version specified and no default engine is set.")
-        return
 
     try:
         parsed = str(GodotVersion.parse(target))
     except ValueError:
         print_error(f"Invalid version: {target}")
-        return
 
     engine_path = paths.versions_dir() / parsed
     if not engine_path.exists():
         print_error(f"Engine version not found: {parsed}")
-        return
 
     binary = utils.find_binary(engine_path)
     if not binary:
         print_error(f"No engine binary found for version: {parsed}")
-        return
 
     print_success(f"Starting Godot {parsed}.")
     utils.start(binary)
@@ -215,7 +211,6 @@ def install(
 
     if not download_url:
         print_error(f"Could not find engine version {tag}.")
-        return
 
     typer.echo(f"Downloading from: {download_url}")
 
@@ -230,10 +225,8 @@ def install(
         utils.download_and_extract(download_url, install_path)
     except (DownloadError, ExtractError) as e:
         print_error(f"{e}")
-        return
     except Exception as e:
         print_error(f"{type(e).__name__}: {e}")
-        return
 
     print_success("Installation completed.")
 
@@ -257,12 +250,10 @@ def engine_default(
         parsed = str(GodotVersion.parse(version))
     except ValueError:
         print_error(f"Invalid version: {version}")
-        return
 
     versions = engines.list_installed()
     if parsed not in versions:
         print_error(f"Engine version not found: {parsed}. Maybe install it first?")
-        return
 
     engines.set_default(paths.versions_dir() / parsed)
     print_success(f"Default engine set to {parsed}.")
