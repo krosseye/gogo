@@ -3,7 +3,6 @@ from PySide6.QtCore import (
     QEasingCurve,
     QEvent,
     QPropertyAnimation,
-    QRectF,
     QSize,
     Qt,
 )
@@ -25,7 +24,7 @@ def create_nav_button(text: str, icon_normal: QIcon, icon_selected: QIcon):
 
 
 class BaseNavButton(QPushButton):
-    ICON_SIZE = QSize(24, 24)
+    ICON_SIZE = QSize(32, 32)
     BUTTON_SIZE = QSize(45, 45)
 
     def __init__(
@@ -122,20 +121,18 @@ class AnimatedNavButton(BaseNavButton):
         )
 
         current_icon = self.icon_selected if self.isChecked() else self.icon_normal
-        pixmap = current_icon.pixmap(self.ICON_SIZE)
-
-        sw = self.ICON_SIZE.width() * self._icon_scale
-        sh = self.ICON_SIZE.height() * self._icon_scale
-        target = QRectF((self.width() - sw) / 2, (self.height() - sh) / 2, sw, sh)
-        painter.drawPixmap(target, pixmap, QRectF(pixmap.rect()))
+        size = self.ICON_SIZE * self._icon_scale
+        pixmap = current_icon.pixmap(size)
+        x = (self.width() - size.width()) // 2
+        y = (self.height() - size.height()) // 2
+        painter.drawPixmap(x, y, size.width(), size.height(), pixmap)
 
     def mousePressEvent(self, event):
-        self._animate_icon(0.9, duration=100, curve=QEasingCurve.Type.OutQuad)
+        self._animate_icon(0.85, duration=100, curve=QEasingCurve.Type.OutQuad)
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        target = 1.2 if self.underMouse() else 1.0
-        self._animate_icon(target)
+        self._animate_icon(1.0, duration=250, curve=QEasingCurve.Type.OutBack)
         super().mouseReleaseEvent(event)
 
     def _animate_icon(self, end_value, duration=200, curve=QEasingCurve.Type.OutQuad):
