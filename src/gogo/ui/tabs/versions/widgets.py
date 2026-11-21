@@ -76,7 +76,7 @@ class InstalledVersionsList(QListWidget):
 
         except Exception as e:
             QMessageBox.warning(
-                self, "Error", f"Failed to load installed versions: {e}"
+                self, "Load Failed", f"Couldn't load installed versions.\n\n{e}"
             )
 
     @staticmethod
@@ -279,7 +279,7 @@ class VersionsTabContent(QWidget):
         )
         self._fetch_worker.failed.connect(
             lambda err: QMessageBox.warning(
-                self, "Error", f"Failed to fetch releases: {err}"
+                self, "Refresh Failed", f"Couldn't fetch releases.\n\n{err}"
             )
         )
         self._fetch_worker.finished.connect(lambda: self._set_fetching(False))
@@ -288,7 +288,9 @@ class VersionsTabContent(QWidget):
 
     def _set_fetching(self, fetching: bool) -> None:
         self.fetch_button.setEnabled(not fetching)
-        self.fetch_button.setToolTip("Fetching releases..." if fetching else "Refresh")
+        self.fetch_button.setToolTip(
+            "Fetching releases..." if fetching else "Refresh releases"
+        )
         self.online_label.setText(
             "<h3>Available Online (updating...)</h3>"
             if fetching

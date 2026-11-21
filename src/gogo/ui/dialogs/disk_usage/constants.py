@@ -191,7 +191,7 @@ CATEGORY_EXTENSIONS = {
         ".orf",
         ".sr2",
     },
-    "Localization": {".po", ".mo", ".translation", ".pot"},
+    "Localisation": {".po", ".mo", ".translation", ".pot"},
     "Data & Config": {
         ".csv",
         ".json",
@@ -268,7 +268,7 @@ CATEGORY_COLORS = {
     "3D Models": "#a29bfe",
     "Audio": "#e84393",
     "Textures": "#00b894",
-    "Localization": "#1289A7",
+    "Localisation": "#1289A7",
     "Documentation": "#95a5a6",
     "Build Artifacts": "#d63031",
     "Video": "#8e44ad",

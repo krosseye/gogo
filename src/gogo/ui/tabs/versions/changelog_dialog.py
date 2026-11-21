@@ -35,7 +35,7 @@ GITHUB_URL_TEMPLATE = (
     "https://raw.githubusercontent.com/godotengine/godot/refs/tags/{tag}/CHANGELOG.md"
 )
 CACHE_DIR_NAME = "changelogs"
-SEARCH_PLACEHOLDER = "Find..."
+SEARCH_PLACEHOLDER = "Find"
 NO_RESULTS_TEXT = "No results"
 RESULTS_TEMPLATE = "{current} of {total}"
 LONGEST_RESULT_STRING = "0000 of 0000"
@@ -316,13 +316,15 @@ class ChangelogDialog(QDialog):
             self.network_manager = None
 
         if reply.error() != QNetworkReply.NetworkError.NoError:
-            self.content_browser.setText(f"Network error: {reply.errorString()}")
+            self.content_browser.setText(
+                f"Couldn't fetch the changelog.\n\n{reply.errorString()}"
+            )
             return
 
         status_code = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code != 200:
             self.content_browser.setText(
-                f"Failed to fetch changelog. HTTP Status: {status_code}"
+                f"Couldn't fetch the changelog (HTTP {status_code})."
             )
             return
 
@@ -335,4 +337,4 @@ class ChangelogDialog(QDialog):
                     logger.warning("Could not cache changelog: %s", e)
             self._set_content_from_markdown(content)
         except Exception as e:
-            self.content_browser.setText(f"Error processing changelog: {e}")
+            self.content_browser.setText(f"Couldn't read the changelog.\n\n{e}")

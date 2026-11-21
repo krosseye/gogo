@@ -109,13 +109,11 @@ class ProjectPropertiesDialog(QDialog):
         form_layout = QFormLayout()
 
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("My Awesome Game")
+        self.name_edit.setPlaceholderText("My Game")
         self.version_edit = QLineEdit()
         self.version_edit.setPlaceholderText("1.0.0")
         self.description_edit = QPlainTextEdit()
-        self.description_edit.setPlaceholderText(
-            "A short and engaging description of the project."
-        )
+        self.description_edit.setPlaceholderText("A short description of the project")
         self.description_edit.setFixedHeight(80)
 
         self.engine_version_selector = VersionSelector(self)
@@ -221,8 +219,8 @@ class ProjectPropertiesDialog(QDialog):
                         "Engine Version Downgrade",
                         f"You are about to downgrade from Godot {current_version} to {selected_version}.\n\n"
                         "This can cause compatibility issues or project corruption. "
-                        "It is strongly recommended to back up your project first.\n\n"
-                        "Do you want to proceed?",
+                        "Back up your project before continuing.\n\n"
+                        "Continue?",
                         QMessageBox.StandardButton.Yes
                         | QMessageBox.StandardButton.Cancel,
                         QMessageBox.StandardButton.Cancel,
@@ -239,8 +237,8 @@ class ProjectPropertiesDialog(QDialog):
                         "Major Engine Upgrade",
                         f"You are about to upgrade from Godot {current_version.major}.x to {selected_version.major}.x.\n\n"
                         "Major version upgrades can introduce breaking changes. "
-                        "Please consult the official Godot migration guides.\n\n"
-                        "Do you want to proceed?",
+                        "Check the official Godot migration guides first.\n\n"
+                        "Continue?",
                         QMessageBox.StandardButton.Yes
                         | QMessageBox.StandardButton.Cancel,
                         QMessageBox.StandardButton.Cancel,
@@ -252,7 +250,7 @@ class ProjectPropertiesDialog(QDialog):
 
             except Exception as e:
                 QMessageBox.critical(
-                    self, "Error", f"Failed to set engine version:\n{e}"
+                    self, "Save Failed", f"Couldn't set the engine version.\n\n{e}"
                 )
                 return
 

@@ -121,7 +121,7 @@ class ProjectListItem(QWidget):
         self.path_label.setSizePolicy(
             QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
         )
-        self.path_label.setToolTip("Project Path")
+        self.path_label.setToolTip("Project path")
         path_layout.addWidget(self.path_label)
 
         return path_layout
@@ -137,7 +137,7 @@ class ProjectListItem(QWidget):
         version_pixmap = IconGenerator.get_version_pin(version_string)
 
         self.version_emblem = EmblemWidget(version_string, version_pixmap)
-        self.version_emblem.setToolTip("Preferred Engine Version")
+        self.version_emblem.setToolTip("Preferred engine version")
         meta_layout.addWidget(self.version_emblem)
 
         fav_pixmap = KQIcon(
@@ -250,13 +250,13 @@ class ProjectListItem(QWidget):
 
         menu.addSeparator()
 
-        remove_action = menu.addAction("Remove Project")
-        remove_action.setToolTip("Delete files")
+        remove_action = menu.addAction("Delete Project...")
+        remove_action.setToolTip("Delete the project folder")
         remove_action.setIcon(QIcon.fromTheme("edit-delete"))
         remove_action.triggered.connect(self.delete_requested.emit)
 
-        forget_action = menu.addAction("Forget Project")
-        forget_action.setToolTip("Forget files, but don't delete them")
+        forget_action = menu.addAction("Forget Project...")
+        forget_action.setToolTip("Remove from the list. Files stay on disk.")
         forget_action.setIcon(KQIcon("folder-minus", style=IconStyle.BOLD).pixmap(24))
         forget_action.triggered.connect(self.forget_requested.emit)
 
@@ -275,12 +275,12 @@ class ProjectListItem(QWidget):
         )
 
         project_properties_action = tools_menu.addAction(
-            KQIcon("gear", style=IconStyle.BOLD).pixmap(24), "Project Properties"
+            KQIcon("gear", style=IconStyle.BOLD).pixmap(24), "Project Properties..."
         )
         project_properties_action.triggered.connect(self._show_project_properties)
 
         disk_usage_action = tools_menu.addAction(
-            KQIcon("chart-pie", style=IconStyle.BOLD).pixmap(24), "Disk Usage"
+            KQIcon("chart-pie", style=IconStyle.BOLD).pixmap(24), "Disk Usage..."
         )
         disk_usage_action.triggered.connect(self._show_disk_usage)
 

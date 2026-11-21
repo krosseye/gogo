@@ -76,7 +76,7 @@ class BaseSettingField(ABC):
         btn.setIcon(KQIcon("arrow-counter-clockwise", style=IconStyle.BOLD))
         btn.setIconSize(QSize(16, 16))
         btn.setFixedSize(24, 24)
-        btn.setToolTip(f"Reset to default {self.label.lower().replace(':', '')} value")
+        btn.setToolTip(f"Reset {self.label.lower().rstrip(':')} to default")
         return btn
 
     def create_layout(self) -> QHBoxLayout:
@@ -303,24 +303,24 @@ class SettingsTabContent(QWidget):
             ),
             CheckboxField(
                 key="minimize_on_project_open",
-                label="Minimize on project open:",
+                label="Minimise on project open:",
                 default=config.default_config["minimize_on_project_open"],
-                tooltip="Minimize window when opening a project",
-                group="Behavior",
+                tooltip="Minimise the window when opening a project",
+                group="Behaviour",
             ),
             CheckboxField(
                 key="close_on_project_open",
                 label="Close on project open:",
                 default=config.default_config["close_on_project_open"],
-                tooltip="Close window when opening a project",
-                group="Behavior",
+                tooltip="Close the window when opening a project",
+                group="Behaviour",
             ),
             PathField(
                 key="default_project_path",
                 label="Default project path:",
                 default=config.default_config["default_project_path"],
-                placeholder="Select a default project path",
-                tooltip="Set the default directory for new projects",
+                placeholder="Choose a folder",
+                tooltip="Where new projects are created",
                 group="Paths",
             ),
         ]
@@ -428,7 +428,7 @@ class SettingsTabContent(QWidget):
                     QMessageBox.warning(
                         self,
                         "Invalid Path",
-                        f"The selected path is not a valid directory:\n{new_path}",
+                        f"This folder doesn't exist:\n\n{new_path}",
                         QMessageBox.StandardButton.Ok,
                     )
                     return
@@ -467,7 +467,7 @@ class SettingsTabContent(QWidget):
         """Offer a restart for settings that only take effect at startup."""
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Icon.Information)
-        msg.setText("Configuration has been updated")
+        msg.setText("Settings saved")
         msg.setInformativeText(
             "Restart GoGo for the reduced motion setting to take effect."
         )

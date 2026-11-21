@@ -39,9 +39,7 @@ class ProjectCreatedDialog(QDialog):
 
         self.text_container = QVBoxLayout()
 
-        self.title_label = QLabel(
-            f"Your new project '<b>{project_name}</b>' has been created successfully!"
-        )
+        self.title_label = QLabel(f"Created <b>{project_name}</b>.")
         self.title_label.setWordWrap(True)
 
         self.path_label = SlidingLabel()
@@ -50,7 +48,7 @@ class ProjectCreatedDialog(QDialog):
         self.path_label.setText(project_path)
 
         self.text_container.addWidget(self.title_label)
-        self.text_container.addWidget(QLabel("It can be found at:"))
+        self.text_container.addWidget(QLabel("Location:"))
         self.text_container.addWidget(self.path_label)
 
         self.content_layout.addLayout(self.text_container, 3)
@@ -74,7 +72,7 @@ class ProjectCreatedDialog(QDialog):
 
         self.main_layout.addLayout(self.content_layout)
 
-        self.ok_button = QPushButton("Got it!")
+        self.ok_button = QPushButton("OK")
         self.ok_button.setFixedWidth(100)
         self.ok_button.clicked.connect(self.accept)
         self.ok_button.setDefault(True)

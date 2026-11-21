@@ -90,7 +90,7 @@ class ConsoleTabContent(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.filter_input = SearchBarWidget(self)
-        self.filter_input.search_bar.setPlaceholderText("Filter output...")
+        self.filter_input.search_bar.setPlaceholderText("Filter output")
         self.filter_input.search_text_changed.connect(self._set_filter)
         QShortcut(
             QKeySequence.StandardKey.Find, self, self.filter_input.search_bar.setFocus
@@ -124,7 +124,7 @@ class ConsoleTabContent(QWidget):
         self.options_btn.setIcon(KQIcon("funnel", style=IconStyle.BOLD))
         self.options_btn.setFixedHeight(32)
         menu = QMenu(self)
-        self.auto_scroll_action = menu.addAction("Auto Scroll")
+        self.auto_scroll_action = menu.addAction("Auto-Scroll")
         self.auto_scroll_action.setCheckable(True)
         self.auto_scroll_action.setChecked(True)
         wrap_action = menu.addAction("Wrap Text")

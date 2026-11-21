@@ -49,7 +49,7 @@ class ProjectDetailsGroup(QGroupBox):
         )
 
         self._name_edit = QLineEdit()
-        self._name_edit.setPlaceholderText("Enter a unique project name...")
+        self._name_edit.setPlaceholderText("Project name")
         self._name_edit.textChanged.connect(self._on_name_changed)
 
         generate_btn = QPushButton()
@@ -67,9 +67,7 @@ class ProjectDetailsGroup(QGroupBox):
         self._folder_preview_label.setStyleSheet("color: gray; font-family: monospace;")
 
         self._description_edit = QPlainTextEdit()
-        self._description_edit.setPlaceholderText(
-            "Enter an interesting project description..."
-        )
+        self._description_edit.setPlaceholderText("A short description of the project")
         self._description_edit.setFixedHeight(80)
 
         form_layout.addRow("<b>Name:</b>", name_layout)
@@ -93,9 +91,7 @@ class ProjectDetailsGroup(QGroupBox):
 
     def _on_name_changed(self, text: str) -> None:
         sanitized = sanitize_project_name(text)
-        self._folder_preview_label.setText(
-            sanitized if sanitized else "project_name_preview"
-        )
+        self._folder_preview_label.setText(sanitized)
         if sanitized:
             self._icon_preview.setPixmap(IconGenerator.get_project_icon(sanitized))
 

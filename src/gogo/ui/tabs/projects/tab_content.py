@@ -124,7 +124,7 @@ class ProjectsTabContent(QFrame):
         )
         if not git_installed():
             self.git_clone_button.setEnabled(False)
-            self.git_clone_button.setToolTip("Git is not installed")
+            self.git_clone_button.setToolTip("Git isn't installed")
 
     def create_tools(self):
         """Titlebar widgets."""
@@ -219,7 +219,11 @@ class ProjectsTabContent(QFrame):
         try:
             versions_dict = engines.list_installed()
             if not versions_dict:
-                QMessageBox.critical(self, "Error", "No Godot versions found.")
+                QMessageBox.critical(
+                    self,
+                    "Import Failed",
+                    "No Godot versions are installed. Install one first.",
+                )
                 return
 
             _project = gdk_project.parse.read(Path(project_file))
@@ -236,22 +240,24 @@ class ProjectsTabContent(QFrame):
             self.load_projects()
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to import project: {e}")
+            QMessageBox.critical(
+                self, "Import Failed", f"Couldn't import the project.\n\n{e}"
+            )
 
     def _select_engine_version(
         self, project_info: Mapping[str, Any], pinned: str | None
     ) -> str | None:
         lines = ["Choose the engine version to use:"]
         if pinned:
-            lines.append(f"Pinned Version (.godot-version): {pinned}")
+            lines.append(f"Pinned version (.godot-version): {pinned}")
         requested = project_info.get("engine_version")
         if requested:
-            lines.append(f"Requested Version: {requested}")
+            lines.append(f"Requested version: {requested}")
         if compat := project_info.get("compatibility_version"):
-            lines.append(f"Compatibility Version: {compat}")
+            lines.append(f"Compatibility version: {compat}")
         return choose_engine_version(
             self,
-            "Select Engine Version",
+            "Choose Engine Version",
             "\n\n".join(lines),
             preselect=pinned or requested,
         )
@@ -276,7 +282,7 @@ class ProjectsTabContent(QFrame):
 
         if not project_item:
             QMessageBox.warning(
-                self, "No Project Selected", "Please select a project to delete."
+                self, "No Project Selected", "Select a project to delete."
             )
             return
 
@@ -299,7 +305,7 @@ class ProjectsTabContent(QFrame):
                     self,
                     "Delete Project",
                     f"The project couldn't be moved to the {trash}.\n\n"
-                    "Delete it permanently instead? This cannot be undone.",
+                    "Delete it permanently instead? This can't be undone.",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                     QMessageBox.StandardButton.No,
                 )
@@ -307,7 +313,9 @@ class ProjectsTabContent(QFrame):
                     return
                 project_item.project.remove()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to delete project: {e}")
+            QMessageBox.critical(
+                self, "Delete Failed", f"Couldn't delete the project.\n\n{e}"
+            )
             return
 
         projects.remove(project_path)
@@ -320,7 +328,7 @@ class ProjectsTabContent(QFrame):
 
         if not project_item:
             QMessageBox.warning(
-                self, "No Project Selected", "Please select a project to forget."
+                self, "No Project Selected", "Select a project to forget."
             )
             return
 
@@ -329,7 +337,7 @@ class ProjectsTabContent(QFrame):
         reply = QMessageBox.question(
             self,
             "Forget Project",
-            "Are you sure you want to forget this project?\n\n The project files will remain on disk.",
+            f"Remove {project_item.project.name} from the list?\n\nIts files will stay on disk.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -340,5 +348,5 @@ class ProjectsTabContent(QFrame):
                 self.load_projects()
             except Exception as e:
                 QMessageBox.critical(
-                    self, "Error", f"Failed to update the project list: {e}"
+                    self, "Forget Failed", f"Couldn't update the project list.\n\n{e}"
                 )

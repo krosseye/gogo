@@ -104,7 +104,7 @@ class ReleaseListItem(QWidget):
     def _create_source_layout(self) -> QHBoxLayout:
         self.source_label = SlidingLabel(self.source)
         self.source_label.setToolTip(
-            "Download URL" if self.is_remote else "Install Directory"
+            "Download URL" if self.is_remote else "Install folder"
         )
         self.source_label.set_max_width(self.width() / 2)
 
@@ -126,7 +126,7 @@ class ReleaseListItem(QWidget):
         icon_label.setStyleSheet("QLabel { padding-right: 4px; }")
 
         size_label = QLabel(f"{size_bytes / (1024 * 1024):.2f} MB")
-        size_label.setToolTip("Archive Size" if self.is_remote else "Install Size")
+        size_label.setToolTip("Download size" if self.is_remote else "Size on disk")
 
         layout = QHBoxLayout()
         layout.addWidget(icon_label)
@@ -144,7 +144,7 @@ class ReleaseListItem(QWidget):
                 "star", QColor("gold"), IconStyle.FILL, FillMode.GRADIENT
             ).pixmap(18)
             emblem = EmblemWidget("Default", pixmap)
-            emblem.setToolTip("Default Engine")
+            emblem.setToolTip("Default engine")
             meta_layout.addWidget(emblem)
 
         if self.is_installed and self.is_remote:
@@ -152,7 +152,7 @@ class ReleaseListItem(QWidget):
                 "check-circle", QColor("green"), IconStyle.FILL, FillMode.GRADIENT
             ).pixmap(18)
             emblem = EmblemWidget("Installed", pixmap)
-            emblem.setToolTip("Release is installed locally")
+            emblem.setToolTip("Installed on this computer")
             meta_layout.addWidget(emblem)
 
         return meta_layout
@@ -162,7 +162,7 @@ class ReleaseListItem(QWidget):
             QMessageBox.question(
                 self,
                 "Install Godot",
-                f"Do you want to install Godot v{self.title}?\n\nSource: {self.source}",
+                f"Install Godot {self.title}?\n\nSource: {self.source}",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             == QMessageBox.StandardButton.Yes
@@ -174,7 +174,9 @@ class ReleaseListItem(QWidget):
         binary_path = utils.find_binary(Path(self.source))
         if not binary_path:
             QMessageBox.critical(
-                self, "Launch Failed", f"Cannot find Godot binary in:\n{self.source}"
+                self,
+                "Launch Failed",
+                f"Couldn't find the Godot executable in:\n\n{self.source}",
             )
             return
         try:
@@ -189,7 +191,7 @@ class ReleaseListItem(QWidget):
             QMessageBox.question(
                 self,
                 "Uninstall Godot",
-                f"Do you want to uninstall Godot v{self.title}?\n\nSource: {self.source}",
+                f"Uninstall Godot {self.title}?\n\n{self.source}",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             == QMessageBox.StandardButton.Yes
@@ -202,7 +204,7 @@ class ReleaseListItem(QWidget):
                 QMessageBox.critical(
                     self,
                     "Uninstall Failed",
-                    f"Failed to uninstall Godot v{self.title}:\n{e}",
+                    f"Couldn't uninstall Godot {self.title}.\n\n{e}",
                 )
 
     def _set_default(self) -> None:
@@ -211,7 +213,7 @@ class ReleaseListItem(QWidget):
 
     def _add_remote_actions(self, menu: QMenu) -> None:
         verb = "Reinstall" if self.is_installed else "Install"
-        install_action = menu.addAction(f"{verb} Godot v{self.title}")
+        install_action = menu.addAction(f"{verb} Godot {self.title}...")
         install_action.setIcon(QIcon.fromTheme("emblem-downloads"))
         install_action.triggered.connect(self._install)
         menu.addSeparator()
@@ -221,7 +223,7 @@ class ReleaseListItem(QWidget):
         github_action.setIcon(QIcon.fromTheme("emblem-symbolic-link"))
         github_action.triggered.connect(lambda: webbrowser.open(release_url))
 
-        changelog_action = menu.addAction("View Changelog")
+        changelog_action = menu.addAction("View Changelog...")
         changelog_action.setIcon(QIcon.fromTheme("emblem-documents"))
         changelog_action.triggered.connect(
             lambda: ChangelogDialog(self.title, self).exec()
@@ -234,7 +236,7 @@ class ReleaseListItem(QWidget):
         )
 
     def _add_local_actions(self, menu: QMenu) -> None:
-        launch_action = menu.addAction(f"Launch Godot v{self.title}")
+        launch_action = menu.addAction(f"Launch Godot {self.title}")
         launch_action.setIcon(QIcon.fromTheme("document-open"))
         launch_action.triggered.connect(self._launch)
 
@@ -244,7 +246,7 @@ class ReleaseListItem(QWidget):
         default_action.triggered.connect(self._set_default)
         menu.addSeparator()
 
-        uninstall_action = menu.addAction("Uninstall")
+        uninstall_action = menu.addAction("Uninstall...")
         uninstall_action.setIcon(QIcon.fromTheme("edit-delete"))
         uninstall_action.triggered.connect(self._uninstall)
         menu.addSeparator()

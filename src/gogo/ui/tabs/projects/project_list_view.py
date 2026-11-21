@@ -37,8 +37,8 @@ class ProjectListView(QWidget):
 
         self._empty_state_placeholder = PlaceholderWidget(
             self,
-            "Nothing's here...",
-            "Try creating a project or importing an existing one!",
+            "No Projects",
+            "Create a new project or import an existing one.",
         )
 
         layout.addWidget(self._list_widget)
@@ -117,9 +117,9 @@ class ProjectListView(QWidget):
         if not has_items:
             if search_term:
                 self._empty_state_placeholder.hint = (
-                    f"No projects found for: '{search_term}'"
+                    f"No projects match '{search_term}'."
                 )
             else:
                 self._empty_state_placeholder.hint = (
-                    "Try creating a project or importing an existing one!"
+                    "Create a new project or import an existing one."
                 )

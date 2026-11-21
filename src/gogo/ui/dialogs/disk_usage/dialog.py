@@ -118,7 +118,7 @@ class ProjectDiskUsageDialog(QDialog):
         container.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Raised)
         layout = QVBoxLayout(container)
 
-        title_label = QLabel(f"<h2>'{self._project_name}' Disk Usage</h2>")
+        title_label = QLabel(f"<h2>{self._project_name} Disk Usage</h2>")
         title_label.setWordWrap(True)
         layout.addLayout(
             self._create_labeled_row(self.project_icon, title_label, size=32)
@@ -126,7 +126,7 @@ class ProjectDiskUsageDialog(QDialog):
 
         branch = self.get_git_branch(self._project_path)
         if branch:
-            branch_label = QLabel(f"<b>Active Branch:</b> <i>{branch}</i>")
+            branch_label = QLabel(f"<b>Active branch:</b> <i>{branch}</i>")
             layout.addLayout(self._create_labeled_row("git-branch", branch_label))
 
         self.path_label = SlidingLabel(str(self._project_path))
@@ -163,7 +163,7 @@ class ProjectDiskUsageDialog(QDialog):
         layout = QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self._summary_label = QLabel("Preparing scanner...")
+        self._summary_label = QLabel("Scanning...")
         self._progress_bar = QProgressBar()
         self._progress_bar.setFixedHeight(12)
         self._progress_bar.setTextVisible(False)
@@ -202,8 +202,8 @@ class ProjectDiskUsageDialog(QDialog):
         dominant = self._chart_widget.get_dominant_category()
 
         parts = [
-            f"<b>Total Size:</b> {format_bytes(size)}",
-            f"<b>File Count:</b> {count}",
+            f"<b>Total size:</b> {format_bytes(size)}",
+            f"<b>Files:</b> {count}",
         ]
 
         if dominant and size > 0:

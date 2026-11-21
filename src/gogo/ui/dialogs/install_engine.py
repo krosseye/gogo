@@ -110,7 +110,7 @@ def install_engine(
                 QMessageBox.critical(
                     window,
                     "Installation Failed",
-                    f"Could not install Godot {title}:\n\n{failure[0]}",
+                    f"Couldn't install Godot {title}.\n\n{failure[0]}",
                 )
         if not failure:
             install_events.changed.emit()

@@ -139,7 +139,7 @@ class TagEditor(QWidget):
 
         self.line_edit = QLineEdit()
         self.line_edit.setFixedHeight(26)
-        self.line_edit.setPlaceholderText("Enter tags (CSV) and press Enter")
+        self.line_edit.setPlaceholderText("Separate tags with commas, then press Enter")
         self.line_edit.setObjectName("TagLineEdit")
         layout.addWidget(self.line_edit)
 

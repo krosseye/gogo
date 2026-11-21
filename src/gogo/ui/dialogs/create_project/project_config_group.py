@@ -32,7 +32,7 @@ class ProjectConfigGroup(QGroupBox):
         form_layout = QFormLayout(self)
 
         self._location_edit = QLineEdit()
-        self._location_edit.setPlaceholderText("Choose Project Location")
+        self._location_edit.setPlaceholderText("Project location")
         self._location_edit.textChanged.connect(self.config_changed)
 
         browse_btn = QPushButton("Browse")
@@ -46,10 +46,10 @@ class ProjectConfigGroup(QGroupBox):
         self._version_combo = VersionSelector()
         self._version_combo.currentIndexChanged.connect(self.config_changed)
 
-        self._git_checkbox = QCheckBox("Initialize Git Repository")
+        self._git_checkbox = QCheckBox("Initialise Git Repository")
         if not git_installed():
             self._git_checkbox.setEnabled(False)
-            self._git_checkbox.setToolTip("Git is not installed on your system.")
+            self._git_checkbox.setToolTip("Git isn't installed.")
         else:
             self._git_checkbox.setChecked(True)
 

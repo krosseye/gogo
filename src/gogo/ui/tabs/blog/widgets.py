@@ -126,8 +126,7 @@ class BlogTabContent(QWidget):
         self.feed_fetcher: RSSFetcherThread | None = None
 
         self.loading_widget = PlaceholderWidget(
-            title="Loading feed...",
-            hint="Just give us a sec!",
+            title="Loading Feed...",
             icon=KQIcon("newspaper").pixmap(128),
         )
         self.main_layout.addWidget(self.loading_widget)
@@ -260,7 +259,7 @@ class BlogTabContent(QWidget):
         logger.error("Feed loading failed: %s", error_message)
 
         self.lists_container.hide()
-        self.loading_widget.title = "Error loading feed"
+        self.loading_widget.title = "Couldn't Load Feed"
         self.loading_widget.hint = error_message
         self.loading_widget.show()
 

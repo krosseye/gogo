@@ -14,7 +14,7 @@ class PlaceholderWidget(QFrame):
     def __init__(
         self,
         parent=None,
-        title: str = "Hello, World!",
+        title: str = "",
         hint: str | None = None,
         icon: QPixmap | None = None,
     ):

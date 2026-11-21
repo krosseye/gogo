@@ -118,7 +118,9 @@ class CreateProjectDialog(QDialog):
                     git_init=self._config_group.is_git_enabled(),
                 )
         except Exception as e:
-            QMessageBox.critical(self, "Creation Failed", f"An error occurred:\n{e}")
+            QMessageBox.critical(
+                self, "Creation Failed", f"Couldn't create the project.\n\n{e}"
+            )
             return
 
         projects.add(project_path)

@@ -33,7 +33,7 @@ class SearchBarWidget(QFrame):
         self.search_bar.setStyleSheet(
             "QLineEdit{background-color: transparent; border: none;}"
         )
-        self.search_bar.setPlaceholderText("Search by project name...")
+        self.search_bar.setPlaceholderText("Search by project name")
         self.search_bar.setFixedHeight(32)
 
         self.clear_button = QPushButton(self, icon=QIcon.fromTheme("window-close"))

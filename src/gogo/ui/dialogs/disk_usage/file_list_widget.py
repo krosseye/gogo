@@ -39,8 +39,8 @@ class FileListWidget(QWidget):
         self._layout.setContentsMargins(0, 0, 0, 0)
 
         self._placeholder = PlaceholderWidget(
-            title="Try Selecting a Category...",
-            hint="",
+            title="No Category Selected",
+            hint="Select a category in the chart to see its files.",
         )
 
         self._view = QTreeView()

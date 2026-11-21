@@ -102,13 +102,13 @@ def engine_start(
 
     engine_path = paths.versions_dir() / parsed
     if not engine_path.exists():
-        print_error(f"Engine version not found: {parsed}")
+        print_error(f"Godot {parsed} isn't installed.")
 
     binary = utils.find_binary(engine_path)
     if not binary:
-        print_error(f"No engine binary found for version: {parsed}")
+        print_error(f"Couldn't find the Godot executable for {parsed}.")
 
-    print_success(f"Starting Godot {parsed}.")
+    typer.echo(f"Starting Godot {parsed}...")
     utils.start(binary)
 
 
@@ -184,7 +184,7 @@ def install(
     from godotkit.engine import DownloadError, ExtractError
 
     base_version = tag.split("-")[0]
-    print_success(f"Searching for Godot {base_version}.")
+    typer.echo(f"Searching for Godot {base_version}...")
 
     fetcher = GodotFetcher()
 
@@ -210,7 +210,7 @@ def install(
             time.sleep(1 + attempt)
 
     if not download_url:
-        print_error(f"Could not find engine version {tag}.")
+        print_error(f"Couldn't find Godot {tag}.")
 
     typer.echo(f"Downloading from: {download_url}")
 
@@ -228,7 +228,7 @@ def install(
     except Exception as e:
         print_error(f"{type(e).__name__}: {e}")
 
-    print_success("Installation completed.")
+    print_success("Installation complete.")
 
 
 @engine_app.command("default")
@@ -253,7 +253,9 @@ def engine_default(
 
     versions = engines.list_installed()
     if parsed not in versions:
-        print_error(f"Engine version not found: {parsed}. Maybe install it first?")
+        print_error(
+            f"Godot {parsed} isn't installed. Install it with: gogo engine install <tag>"
+        )
 
     engines.set_default(paths.versions_dir() / parsed)
     print_success(f"Default engine set to {parsed}.")
