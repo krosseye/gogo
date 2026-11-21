@@ -4,9 +4,8 @@ import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from kq_icon_engine import KQIcon
 from PySide6.QtCore import QEventLoop, QThread, QUrl, Signal
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QImage
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 
 from gogo.core.constants import FEED_CACHE_LIFETIME
@@ -17,16 +16,16 @@ logger = logging.getLogger(__name__)
 class ImageLoader(QThread):
     """
     Loads an image from a URL using Qt Networking.
-    Uses a disk cache with atomic writes and provides a fallback pixmap.
+    Uses a disk cache. Emits a QImage (QPixmap is GUI-thread only);
+    a null QImage means loading failed.
     """
 
-    image_loaded = Signal(QPixmap)
+    image_loaded = Signal(QImage)
 
     def __init__(self, url: str, cache_path: Path):
         super().__init__()
         self.url = url
         self.cache_path = cache_path
-        self.fallback_pixmap = KQIcon("image-broken").pixmap(150)
 
         self.image_filename = self._get_cache_filename(url)
         self.image_cache_path = self.cache_path / self.image_filename
@@ -37,12 +36,12 @@ class ImageLoader(QThread):
         extension = Path(QUrl(url).path()).suffix
         return f"{url_hash}{extension}" if extension else url_hash
 
-    def _load_from_cache(self) -> QPixmap | None:
+    def _load_from_cache(self) -> QImage | None:
         if not self.image_cache_path.exists():
             return None
 
-        pixmap = QPixmap(str(self.image_cache_path))
-        return pixmap if not pixmap.isNull() else None
+        image = QImage(str(self.image_cache_path))
+        return image if not image.isNull() else None
 
     def _write(self, data: bytes, path: Path):
         with open(path, "wb") as f:
@@ -68,20 +67,20 @@ class ImageLoader(QThread):
                 raise OSError(f"Network error: {reply.errorString()}")
 
             data = reply.readAll()
-            pixmap = QPixmap()
-            if pixmap.loadFromData(data):
+            image = QImage()
+            if image.loadFromData(data):
                 self.cache_path.mkdir(parents=True, exist_ok=True)
                 self._write(data.data(), self.image_cache_path)
-                self.image_loaded.emit(pixmap)
+                self.image_loaded.emit(image)
             else:
                 logger.warning("Failed to decode image: %s", self.url)
-                self.image_loaded.emit(self.fallback_pixmap)
+                self.image_loaded.emit(QImage())
 
             reply.deleteLater()
 
         except Exception:
             logger.exception("Image load error: %s", self.url)
-            self.image_loaded.emit(self.fallback_pixmap)
+            self.image_loaded.emit(QImage())
 
 
 class RSSFetcherThread(QThread):

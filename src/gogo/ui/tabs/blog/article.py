@@ -5,6 +5,7 @@ from kq_icon_engine import KQIcon
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import (
     QDesktopServices,
+    QImage,
     QMouseEvent,
     QPainter,
     QPainterPath,
@@ -124,9 +125,12 @@ class _ArticleWidget(QWidget):
         if self._source_pixmap is not None:
             self._set_scaled_pixmap(self._source_pixmap, self._source_expand)
 
-    def _on_image_loaded(self, pixmap: QPixmap):
-        if not pixmap.isNull():
-            self._set_scaled_pixmap(pixmap, expand=True)
+    def _on_image_loaded(self, image: QImage):
+        if image.isNull():
+            broken = KQIcon("image-broken").pixmap(int(self.IMAGE_SIZE[1] * 0.6))
+            self._set_scaled_pixmap(broken, expand=False)
+        else:
+            self._set_scaled_pixmap(QPixmap.fromImage(image), expand=True)
 
 
 class RSSCard(_ArticleWidget):
