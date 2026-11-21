@@ -223,8 +223,10 @@ class ProjectsTabContent(QFrame):
                 return
 
             _project = gdk_project.parse.read(Path(project_file))
+            version_file = Path(project_file).parent / ".godot-version"
+            pinned = version_file.read_text().strip() if version_file.exists() else None
 
-            selected_version_name = self._select_engine_version(_project)
+            selected_version_name = self._select_engine_version(_project, pinned)
             if not selected_version_name:
                 return
 
@@ -236,23 +238,27 @@ class ProjectsTabContent(QFrame):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to import project: {e}")
 
-    def _select_engine_version(self, project_info: Mapping[str, Any]) -> str | None:
+    def _select_engine_version(
+        self, project_info: Mapping[str, Any], pinned: str | None
+    ) -> str | None:
         lines = ["Choose the engine version to use:"]
+        if pinned:
+            lines.append(f"Pinned Version (.godot-version): {pinned}")
         requested = project_info.get("engine_version")
         if requested:
             lines.append(f"Requested Version: {requested}")
         if compat := project_info.get("compatibility_version"):
             lines.append(f"Compatibility Version: {compat}")
         return choose_engine_version(
-            self, "Select Engine Version", "\n\n".join(lines), preselect=requested
+            self,
+            "Select Engine Version",
+            "\n\n".join(lines),
+            preselect=pinned or requested,
         )
 
     def _write_project_engine_version(self, project_path: str, engine_version: str):
-        """Write .godot-version next to project.godot (an existing one is kept)."""
-        project_dir = Path(project_path).parent
-        version_file = project_dir / ".godot-version"
-        if not version_file.exists():
-            version_file.write_text(engine_version)
+        """Write the chosen version to .godot-version next to project.godot."""
+        (Path(project_path).parent / ".godot-version").write_text(engine_version)
 
     def import_project(self):
         project_file, _ = QFileDialog.getOpenFileName(
