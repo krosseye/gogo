@@ -273,20 +273,15 @@ wheels = [
 
 [[package]]
 name = "godotkit"
-version = "0.7.1"
-source = { url = "https://github.com/krosseye/godotkit/releases/download/v0.7.1/godotkit-0.7.1-py3-none-any.whl" }
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
     { name = "httpx" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/c0/55/5bafcdbf726b1bdd85a804a9a42296e59166cb1b61fd4acf811ea48741d2/godotkit-0.9.0.tar.gz", hash = "sha256:a5c2f25ed9bc426bd2a283e6bdebd47222b45a5ff9f8b4174e7e64a68724a0b0", size = 25110, upload-time = "2026-11-20T21:51:35.478Z" }
 wheels = [
-    { url = "https://github.com/krosseye/godotkit/releases/download/v0.7.1/godotkit-0.7.1-py3-none-any.whl", hash = "sha256:4608b55396ef0c91e665c5fb319213a8768b8704841fe30e9da6f90e8a1a548b" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "filelock", specifier = ">=4.0,<5.0.0" },
-    { name = "httpx", specifier = ">=0.28,<1.0.0" },
+    { url = "https://files.pythonhosted.org/packages/f4/36/5e858a48388eebd72fa97cf63b0030b3daa5dc433a05147436fb5a3b9e2c/godotkit-0.9.0-py3-none-any.whl", hash = "sha256:8f8da07a3f2bb615bb12f11cb068f194ca4d9b689bc870d0341a73c7f1985919", size = 30253, upload-time = "2026-11-20T21:51:34.66Z" },
 ]
 
 [[package]]
@@ -312,7 +307,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "godotkit", url = "https://github.com/krosseye/godotkit/releases/download/v0.7.1/godotkit-0.7.1-py3-none-any.whl" },
+    { name = "godotkit", specifier = ">=0.9.0,<0.10.0" },
     { name = "kq-icon-engine", url = "https://github.com/krosseye/kq_icon_engine/releases/download/v0.1.2/kq_icon_engine-0.1.2-py3-none-any.whl" },
     { name = "mistune", specifier = ">=3.4.0" },
     { name = "pyside6", specifier = ">=6.12.0" },

@@ -284,11 +284,7 @@ class ChangelogDialog(QDialog):
         self._start_download(url)
 
     def _get_version_tag(self) -> str:
-        version_data = GodotVersion.parse(self.version_title)
-        version_tag = str(version_data).replace(" (.NET)", "").replace(" (Mono)", "")
-        if version_data.is_stable:
-            version_tag += "-stable"
-        return version_tag
+        return GodotVersion.parse(self.version_title).to_tag()
 
     def _get_cache_path(self, version_tag: str) -> Path:
         cache_dir = paths.cache_dir() / CACHE_DIR_NAME
