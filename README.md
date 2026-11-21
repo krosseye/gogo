@@ -1,20 +1,43 @@
-# GoGo
+<img src="./images/banner.png" alt="GoGo" width="256">
 
-**GoGo** is an engine and project manager designed for the **[Godot Engine](https://godotengine.org/)**.
+> **Status: early development.** There are no packaged releases yet, so you run it from source. Expect rough edges and breaking changes.
 
-Simplify your workflow with GoGo's centralized tools:
+GoGo is a desktop app for managing [Godot Engine](https://godotengine.org/) versions and projects, with a small command-line interface alongside it.
 
-- **Effortlessly manage projects**: Create, organize, and launch Godot projects in one place
-- **Install and browse engine versions**: Download official releases with a single click
-- **Stay informed**: Track Godot updates via the built-in RSS news feed
+## Preview
 
-## Notices
+![Screenshot of GoGo's project page](./images/screenshot_01.png)
 
-- **Godot Engine:** Downloaded and managed by GoGo (not bundled). Godot is licensed under [MIT License](https://opensource.org/licenses/MIT)
-- **Godot Logo:** Used for application branding. Licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- **PySide6 (Qt for Python):** Used as the GUI framework. Licensed under [LGPLv3 License](https://www.gnu.org/licenses/lgpl-3.0.html)
-- **Google Material Icons:** Used for UI elements. Licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+## Running from source
 
-GoGo is licensed under the permissive [MIT License](https://opensource.org/licenses/MIT).
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
-*Copyright © 2025 Killian-W (krosseye). All rights reserved.*
+```sh
+uv sync
+uv run gogo          # opens the GUI
+uv run gogo --help   # CLI
+```
+
+## CLI
+
+The CLI currently covers engines only:
+
+```sh
+gogo engine list [--default] [--verbose] [--json]
+gogo engine browse [--all] [--csharp] [--max N] [--json]
+gogo engine install 4.3-stable [--csharp]
+gogo engine default [VERSION]
+gogo engine start [VERSION]
+```
+
+## Third-party notices
+
+- **Godot Engine:** downloaded by GoGo, not bundled. [MIT License](https://opensource.org/licenses/MIT).
+- **Godot logo:** used for branding. [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **PySide6 (Qt for Python):** the GUI framework. [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.html).
+- **Phosphor Icons**, via [kq_icon_engine](https://github.com/krosseye/kq_icon_engine): UI icons. [MIT License](https://opensource.org/licenses/MIT).
+- **[GodotKit](https://github.com/krosseye/godotkit):** release fetching, downloads and project files. [MIT License](https://opensource.org/licenses/MIT).
+
+## License
+
+MIT © 2025 Killian W (krosseye)
