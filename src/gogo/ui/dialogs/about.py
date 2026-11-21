@@ -88,6 +88,16 @@ _HTML_COPYRIGHT = """
 """
 
 
+def _os_release() -> str:
+    release = platform.release()
+    # Windows 11 still reports itself as 10
+    if platform.system() == "Windows" and release == "10":
+        build = platform.version().split(".")[-1]
+        if build.isdigit() and int(build) >= 22000:
+            return "11"
+    return release
+
+
 class StatsWorker(QThread):
     stats_ready = Signal(object)
 
@@ -230,7 +240,7 @@ class AboutDialog(QDialog):
             python_ver=platform.python_version(),
             qt_ver=qVersion(),
             os_sys=platform.system(),
-            os_rel=platform.release(),
+            os_rel=_os_release(),
             arch=detect_architecture(),
         )
 
