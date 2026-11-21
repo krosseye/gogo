@@ -33,9 +33,10 @@ def setup_metadata() -> None:
 
 
 def setup_logging() -> None:
-    """Configures the logging."""
+    """Configures the logging. Quiet by default; set GOGO_LOG_LEVEL=INFO or DEBUG for more."""
+    level = os.environ.get("GOGO_LOG_LEVEL", "WARNING").upper()
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.getLevelNamesMapping().get(level, logging.WARNING),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )
