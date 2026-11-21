@@ -41,6 +41,7 @@ godotkit = { url = "https://github.com/krosseye/godotkit/releases/download/v0.7.
 version_toml = ["pyproject.toml:project.version"]
 allow_zero_version = true
 major_on_zero = false
+build_command = "uv lock --upgrade-package gogo && git add uv.lock"
 
 [tool.ruff.lint.per-file-ignores]
 "src/gogo/{ui,cli}/**" = ["BLE001"]
