@@ -1,5 +1,4 @@
 import json
-import time
 from pathlib import Path
 from typing import Any
 
@@ -186,31 +185,16 @@ def install(
     base_version = tag.split("-")[0]
     typer.echo(f"Searching for Godot {base_version}...")
 
-    fetcher = GodotFetcher()
-
-    download_url: str | None = None
-    max_releases = 5
-    increment = 5
-    max_attempts = 5
-
-    for attempt in range(max_attempts):
-        try:
-            fetcher.fetch_releases(
-                stable_only=tag.endswith("-stable"),
-                max_releases=max_releases,
-                refresh_cache=True,
-            )
-            download_url = fetcher.get_download_url(tag, mono=csharp)
-            break
-        except ValueError:
-            max_releases += increment
-            print_warning(
-                f"Version not found. Expanding search to {max_releases} releases."
-            )
-            time.sleep(1 + attempt)
-
-    if not download_url:
-        print_error(f"Couldn't find Godot {tag}.")
+    with GodotFetcher() as fetcher:
+        for refresh in (False, True):
+            fetcher.fetch_releases(stable_only=False, refresh_cache=refresh)
+            try:
+                download_url = fetcher.get_download_url(tag, mono=csharp)
+                break
+            except ValueError:
+                pass
+        else:
+            print_error(f"Couldn't find Godot {tag}.")
 
     typer.echo(f"Downloading from: {download_url}")
 
