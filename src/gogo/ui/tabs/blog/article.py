@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from godotkit.feed import RSSArticle
 from kq_icon_engine import KQIcon
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import (
@@ -15,6 +14,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
+from gogo.core.feed import RSSArticle
 from gogo.ui.components.sliding_label import SlidingLabel
 
 from .threads import ImageLoader
@@ -54,6 +54,8 @@ class _ArticleWidget(QWidget):
 
         self._build_ui()
         self._set_scaled_pixmap(cls.default_pixmap, expand=False)
+        if category := article_data.get("category"):
+            self._add_category_badge(category)
 
         if image_url := self.article_data.get("image_url"):
             self.image_loader = ImageLoader(image_url, self.image_cache_path)
@@ -62,6 +64,26 @@ class _ArticleWidget(QWidget):
 
     def _build_ui(self) -> None:
         raise NotImplementedError
+
+    def _add_category_badge(self, category: str) -> None:
+        """Pin a small solid badge over the thumbnail's top-left corner."""
+        badge = QLabel(category, self.image_label)
+        badge.setTextFormat(Qt.TextFormat.PlainText)
+        font = badge.font()
+        font.setBold(True)
+        if font.pointSizeF() > 0:
+            font.setPointSizeF(font.pointSizeF() - 1)
+        badge.setFont(font)
+        badge.setStyleSheet(
+            """
+            background-color: palette(highlight);
+            color: palette(highlighted-text);
+            border-radius: 4px;
+            padding: 1px 6px;
+            """
+        )
+        badge.adjustSize()
+        badge.move(6, 6)
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:

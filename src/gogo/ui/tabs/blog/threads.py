@@ -8,6 +8,7 @@ from PySide6.QtCore import QEventLoop, QThread, QUrl, Signal
 from PySide6.QtGui import QImage
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 
+from gogo.core import feed
 from gogo.core.constants import FEED_CACHE_LIFETIME
 
 logger = logging.getLogger(__name__)
@@ -92,13 +93,9 @@ class RSSFetcherThread(QThread):
     feed_loaded = Signal(list)
     feed_failed = Signal(str)
 
-    def __init__(self, cache_file: Path, fetcher_cls):
-        """
-        fetcher_cls: class that provides `fetch_feed()` and works as a context manager.
-        """
+    def __init__(self, cache_file: Path):
         super().__init__()
         self.cache_file = cache_file
-        self.fetcher_cls = fetcher_cls
 
     def _write(self, data, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -171,9 +168,7 @@ class RSSFetcherThread(QThread):
 
         if data is None:
             try:
-                with self.fetcher_cls() as fetcher:
-                    data = fetcher.fetch_feed()
-
+                data = feed.fetch()
                 if data:
                     self._save_to_cache(data)
 

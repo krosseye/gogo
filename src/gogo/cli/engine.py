@@ -14,7 +14,7 @@ from godotkit.engine import (
 )
 from godotkit.exceptions import GodotkitError
 
-from gogo.core import engines
+from gogo.core import engines, launcher
 
 from .shared import (
     print_error,
@@ -107,7 +107,11 @@ def engine_start(
         print_error(f"Couldn't find the Godot executable for {name}.")
 
     typer.echo(f"Starting Godot {name}...")
-    utils.start(binary)
+    try:
+        log = launcher.start_engine(binary, name)
+    except OSError as e:
+        print_error(f"Couldn't start Godot {name}: {e}")
+    typer.echo(f"Output goes to {log}")
 
 
 def _parse_version(text: str) -> GodotVersion:

@@ -273,15 +273,15 @@ wheels = [
 
 [[package]]
 name = "godotkit"
-version = "0.10.0"
+version = "0.11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/59/1d/deea18ae4c79027dee0a77f248ae9da8da950a60eec783097f5c985e00c7/godotkit-0.10.0.tar.gz", hash = "sha256:8327eb04cf0fa7d273b5cca14f5484b84414f6c24862b621ebbfdab88f09fe9c", size = 26653, upload-time = "2026-11-22T15:42:13.994Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c8/30/f6d26022a2f0baa143884d0c1e45310a87b2c1536515f099e2afc38af074/godotkit-0.11.0.tar.gz", hash = "sha256:49cb393361a0ea82ff72ef2df3bcf6d526daebe33deca757f0a1a185b36018d2", size = 23269, upload-time = "2026-11-22T17:26:12.083Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/20/04dc9ac1c226924ca32545c9f7b7af211c21133aa93168d11b99c1889cc0/godotkit-0.10.0-py3-none-any.whl", hash = "sha256:a9b759a14920a86059b519db510d9ff82f8a1e0bb1e3e252838ef00f4c28ee3e", size = 31957, upload-time = "2026-11-22T15:42:12.807Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/75/91a2e3ad9e50c5977859385639c60ab648c9a7a88ac1c807eaa2ab9a5805/godotkit-0.11.0-py3-none-any.whl", hash = "sha256:cc73b753d3abbe532e5359410d238cbbcdde6f33dc75eda383e04b3a102f06a3", size = 27430, upload-time = "2026-11-22T17:26:11.195Z" },
 ]
 
 [[package]]
@@ -307,7 +307,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "godotkit", specifier = ">=0.10.0,<0.11.0" },
+    { name = "godotkit", specifier = ">=0.11.0,<0.12.0" },
     { name = "kq-icon-engine", url = "https://github.com/krosseye/kq_icon_engine/releases/download/v0.1.2/kq_icon_engine-0.1.2-py3-none-any.whl" },
     { name = "mistune", specifier = ">=3.4.0" },
     { name = "pyside6", specifier = ">=6.12.0" },

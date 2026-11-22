@@ -1,8 +1,8 @@
 from godotkit.engine import GodotVersion
 from godotkit.project import GodotProject
 from kq_icon_engine import FillMode, IconStyle, KQCustomIcon, KQIcon
-from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import QColor, QContextMenuEvent, QIcon, QPixmap
+from PySide6.QtCore import QSize, Qt, QUrl, Signal
+from PySide6.QtGui import QColor, QContextMenuEvent, QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -264,7 +264,11 @@ class ProjectListItem(QWidget):
 
         open_folder_action = menu.addAction("Open in File Manager")
         open_folder_action.setIcon(QIcon.fromTheme("folder-open"))
-        open_folder_action.triggered.connect(self.project.open_directory)
+        open_folder_action.triggered.connect(
+            lambda: QDesktopServices.openUrl(
+                QUrl.fromLocalFile(str(self.project.dir_path))
+            )
+        )
 
         self._add_copy_action(menu, "Copy Project Path", str(self.project.file_path))
 

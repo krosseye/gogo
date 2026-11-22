@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from godotkit.common import git_installed
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -14,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from gogo.core import config
+from gogo.core.git import git_installed
 from gogo.ui.components.version_selector import VersionSelector
 
 

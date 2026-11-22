@@ -1,7 +1,6 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
-from godotkit.feed import RSSFetcher as GodotKitRSSFetcher
 from kq_icon_engine import KQIcon
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QResizeEvent, QWheelEvent
@@ -149,7 +148,7 @@ class BlogTabContent(QWidget):
         return list_widget
 
     def _load_rss_feed(self):
-        self.feed_fetcher = RSSFetcherThread(self.feed_cache_file, GodotKitRSSFetcher)
+        self.feed_fetcher = RSSFetcherThread(self.feed_cache_file)
         self.feed_fetcher.feed_loaded.connect(self._on_feed_loaded)
         self.feed_fetcher.feed_failed.connect(self._on_feed_failed)
         self.feed_fetcher.start()

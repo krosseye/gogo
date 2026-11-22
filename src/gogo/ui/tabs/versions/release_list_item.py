@@ -1,3 +1,4 @@
+import shutil
 import webbrowser
 from collections.abc import Callable
 from datetime import datetime
@@ -6,10 +7,11 @@ from urllib.parse import urlparse, urlunparse
 
 from godotkit.engine import GodotVersion, utils
 from kq_icon_engine import FillMode, IconStyle, KQIcon
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import (
     QColor,
     QContextMenuEvent,
+    QDesktopServices,
     QIcon,
     QMouseEvent,
     QPalette,
@@ -209,7 +211,7 @@ class ReleaseListItem(QWidget):
             == QMessageBox.StandardButton.Yes
         ):
             try:
-                utils.remove(Path(self.source))
+                shutil.rmtree(self.source)
                 install_events.changed.emit()
                 self.on_change()
             except Exception as e:
@@ -266,7 +268,7 @@ class ReleaseListItem(QWidget):
         open_folder_action = menu.addAction("Open in File Manager")
         open_folder_action.setIcon(QIcon.fromTheme("folder-open"))
         open_folder_action.triggered.connect(
-            lambda: utils.open_directory(Path(self.source))
+            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(self.source))
         )
 
         copy_action = menu.addAction("Copy Engine Path")

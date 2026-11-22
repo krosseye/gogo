@@ -1,10 +1,9 @@
 import os
+import shutil
 import sys
 from pathlib import Path
 
 from godotkit import project as gdk_project
-from godotkit.common import clone as git_clone
-from godotkit.common import git_installed
 from godotkit.engine import GodotVersion
 from godotkit.project import ProjectMetadata, VersionFileError
 from kq_icon_engine import IconStyle, KQIcon
@@ -26,7 +25,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from gogo.core import engines, projects
+from gogo.core import engines, git, projects
 from gogo.core.config import config
 from gogo.ui.components.search_bar import SearchBarWidget
 from gogo.ui.components.version_selector import choose_engine_version
@@ -122,7 +121,7 @@ class ProjectsTabContent(QFrame):
             "Clone a project from a Git repository",
             self._on_git_clone_clicked,
         )
-        if not git_installed():
+        if not git.git_installed():
             self.git_clone_button.setEnabled(False)
             self.git_clone_button.setToolTip("Git isn't installed")
 
@@ -150,7 +149,7 @@ class ProjectsTabContent(QFrame):
         busy.setWindowModality(Qt.WindowModality.WindowModal)
         busy.setMinimumDuration(0)
 
-        worker = Worker(lambda _w: git_clone(url, dest), busy)
+        worker = Worker(lambda _w: git.clone(url, dest), busy)
         worker.succeeded.connect(lambda repo: self._on_cloned(repo, existing))
         worker.failed.connect(
             lambda err: QMessageBox.critical(self, "Clone Failed", err)
@@ -329,7 +328,7 @@ class ProjectsTabContent(QFrame):
                 )
                 if permanent != QMessageBox.StandardButton.Yes:
                     return
-                project_item.project.remove()
+                shutil.rmtree(project_dir)
         except Exception as e:
             QMessageBox.critical(
                 self, "Delete Failed", f"Couldn't delete the project.\n\n{e}"
