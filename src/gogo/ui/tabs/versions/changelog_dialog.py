@@ -61,9 +61,9 @@ class ChangelogDialog(QDialog):
 
     MINIMUM_SIZE = QSize(600, 500)
 
-    def __init__(self, version_title: str, *args, **kwargs):
+    def __init__(self, version: GodotVersion, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.version_title = version_title
+        self.version = version
 
         self.network_manager: QNetworkAccessManager | None = None
         self.pending_cache_path: Path | None = None
@@ -73,7 +73,9 @@ class ChangelogDialog(QDialog):
         self._load_changelog()
 
     def _configure_window(self):
-        self.setWindowTitle(WINDOW_TITLE_TEMPLATE.format(version=self.version_title))
+        self.setWindowTitle(
+            WINDOW_TITLE_TEMPLATE.format(version=self.version.display_name)
+        )
         self.resize(self.MINIMUM_SIZE)
         self.setMinimumSize(self.MINIMUM_SIZE)
 
@@ -286,7 +288,7 @@ class ChangelogDialog(QDialog):
         self._start_download(url)
 
     def _get_version_tag(self) -> str:
-        return GodotVersion.parse(self.version_title).to_tag()
+        return self.version.to_tag()
 
     def _get_cache_path(self, version_tag: str) -> Path:
         cache_dir = paths.cache_dir() / CACHE_DIR_NAME

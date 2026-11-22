@@ -157,7 +157,7 @@ class ProjectPropertiesDialog(QDialog):
 
         engine_version = self.project.engine_version
         if engine_version:
-            self.engine_version_selector.set_selected_version(str(engine_version))
+            self.engine_version_selector.set_selected_version(engine_version)
         icon_path = self.metadata.get("icon_path")
         self._update_icon_display(icon_path)
 
@@ -193,10 +193,10 @@ class ProjectPropertiesDialog(QDialog):
 
     def _save_metadata(self):
         """Copy the fields into `self.metadata`, confirming risky engine changes."""
-        self.metadata["name"] = self.name_edit.text()
-        self.metadata["version"] = self.version_edit.text()
-        self.metadata["description"] = self.description_edit.toPlainText()
-        self.metadata["tags"] = list(self.tags_edit.get_tags() or [])
+        self.metadata["name"] = self.name_edit.text() or None
+        self.metadata["version"] = self.version_edit.text() or None
+        self.metadata["description"] = self.description_edit.toPlainText() or None
+        self.metadata["tags"] = list(self.tags_edit.get_tags() or []) or None
 
         selected_engine_str = self.engine_version_selector.get_selected_version()
         if not selected_engine_str:
@@ -217,7 +217,7 @@ class ProjectPropertiesDialog(QDialog):
                     reply = QMessageBox.warning(
                         self,
                         "Engine Version Downgrade",
-                        f"You are about to downgrade from Godot {current_version} to {selected_version}.\n\n"
+                        f"You are about to downgrade from Godot {current_version.display_name} to {selected_version.display_name}.\n\n"
                         "This can cause compatibility issues or project corruption. "
                         "Back up your project before continuing.\n\n"
                         "Continue?",

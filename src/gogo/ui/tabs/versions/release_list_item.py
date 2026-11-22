@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gogo.core import engines, launcher, paths
+from gogo.core import engines, launcher
 from gogo.ui.busy import busy_until_app_inactive
 from gogo.ui.components.elided_label import ElidedLabel
 from gogo.ui.components.emblem_widget import EmblemWidget
@@ -63,11 +63,11 @@ class ReleaseListItem(QWidget):
         self.source = source
         self.on_change = on_change
         self.is_remote = source.startswith("http")
-        self.title = str(version)
+        self.title = version.display_name
         self.published_at = published_at
 
         if self.is_remote:
-            self.is_installed = (paths.versions_dir() / self.title).exists()
+            self.is_installed = str(version) in engines.list_installed()
             self.is_default = False
         else:
             self.is_installed = True
@@ -97,7 +97,7 @@ class ReleaseListItem(QWidget):
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label.setFixedWidth(50)
         icon_label.setPixmap(
-            IconGenerator.get_version_icon(self.title).scaled(
+            IconGenerator.get_version_icon(str(self.version)).scaled(
                 48,
                 48,
                 Qt.AspectRatioMode.KeepAspectRatio,
@@ -180,7 +180,7 @@ class ReleaseListItem(QWidget):
             == QMessageBox.StandardButton.Yes
         ):
             on_change = self.on_change  # this widget is rebuilt by the refresh
-            install_engine(self, self.title, self.source, lambda _ok: on_change())
+            install_engine(self, self.version, lambda _ok: on_change())
 
     def _launch(self) -> None:
         binary_path = utils.find_binary(Path(self.source))
@@ -238,7 +238,7 @@ class ReleaseListItem(QWidget):
         changelog_action = menu.addAction("View Changelog...")
         changelog_action.setIcon(QIcon.fromTheme("emblem-documents"))
         changelog_action.triggered.connect(
-            lambda: ChangelogDialog(self.title, self).exec()
+            lambda: ChangelogDialog(self.version, self).exec()
         )
 
         copy_action = menu.addAction("Copy Download Link")

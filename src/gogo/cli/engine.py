@@ -1,16 +1,20 @@
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import typer
-from godotkit.engine import GodotVersion, utils
-from godotkit.engine.release_fetcher import (
-    GodotFetcher,
+from godotkit.engine import (
+    AssetNotFoundError,
+    GodotVersion,
+    ReleaseNotFoundError,
     detect_architecture,
     detect_platform,
+    utils,
 )
+from godotkit.exceptions import GodotkitError
 
-from gogo.core import engines, paths
+from gogo.core import engines
 
 from .shared import (
     print_error,
@@ -51,14 +55,13 @@ def engine_list(
         return
 
     default_engine = engines.get_default() if (default or verbose) else None
-    default_name = default_engine.name if default_engine else None
 
     if output_json:
         items = []
         for name, path in versions.items():
             entry: dict[str, Any] = {"version": name}
             if default or verbose:
-                entry["default"] = name == default_name
+                entry["default"] = path == default_engine
             if verbose:
                 entry["binary_path"] = str(utils.find_binary(path))
             items.append(entry)
@@ -73,13 +76,13 @@ def engine_list(
                 [
                     name,
                     str(utils.find_binary(path)),
-                    _bool_color(name == default_name),
+                    _bool_color(path == default_engine),
                 ]
             )
         print_table(["Version", "Binary Path", "Default"], rows)
     else:
-        for name in versions:
-            marker = "* " if name == default_name else "  "
+        for name, path in versions.items():
+            marker = "* " if path == default_engine else "  "
             typer.echo(f"{marker}{name}")
 
 
@@ -88,27 +91,30 @@ def engine_start(
     version: str | None = typer.Argument(None, help="The engine version to start."),
 ) -> None:
     """Start a specific installed Godot engine version."""
-    default_engine = engines.get_default()
-    target = version or (default_engine.name if default_engine else None)
-
-    if not target:
-        print_error("No engine version specified and no default engine is set.")
-
-    try:
-        parsed = str(GodotVersion.parse(target))
-    except ValueError:
-        print_error(f"Invalid version: {target}")
-
-    engine_path = paths.versions_dir() / parsed
-    if not engine_path.exists():
-        print_error(f"Godot {parsed} isn't installed.")
+    if version:
+        name = str(_parse_version(version))
+        engine_path = engines.list_installed().get(name)
+        if not engine_path:
+            print_error(f"Godot {name} isn't installed.")
+    else:
+        engine_path = engines.get_default()
+        if not engine_path:
+            print_error("No engine version specified and no default engine is set.")
+        name = engine_path.name
 
     binary = utils.find_binary(engine_path)
     if not binary:
-        print_error(f"Couldn't find the Godot executable for {parsed}.")
+        print_error(f"Couldn't find the Godot executable for {name}.")
 
-    typer.echo(f"Starting Godot {parsed}...")
+    typer.echo(f"Starting Godot {name}...")
     utils.start(binary)
+
+
+def _parse_version(text: str) -> GodotVersion:
+    try:
+        return GodotVersion.parse(text)
+    except ValueError:
+        print_error(f"Invalid version: {text}")
 
 
 @engine_app.command("browse")
@@ -126,93 +132,84 @@ def browse(
     output_json: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Browse remote Godot releases with filters."""
-    fetcher = GodotFetcher()
     plat = platform_name or detect_platform()
     arch = arch or detect_architecture()
 
-    releases = fetcher.fetch_releases(
-        stable_only=not all_release_types,
-        max_releases=max_releases,
-        platform_only=True,
-        refresh_cache=new,
-    )
+    with engines.fetcher() as fetcher:
+        try:
+            releases = fetcher.fetch_releases(
+                stable_only=not all_release_types,
+                max_releases=max_releases,
+                platform=plat,
+                arch=arch,
+                refresh_cache=new,
+            )
+        except ValueError as e:
+            print_error(str(e))
 
     if not releases:
         print_warning("No matching releases found.")
         raise typer.Exit()
 
-    if output_json:
-        items = []
-        for release in releases:
-            asset = release.get_asset(plat, arch, csharp)
-            items.append(
-                {
-                    "version": str(GodotVersion.from_url(asset.url)) if asset else None,
-                    "tag": release.version,
-                    "published": release.published_at.isoformat(),
-                    "url": asset.url if asset else None,
-                }
-            )
-        typer.echo(json.dumps({"releases": items}, indent=2))
-        return
-
     rows = []
     for release in releases:
         asset = release.get_asset(plat, arch, csharp)
-        version_str = "N/A" if not asset else str(GodotVersion.from_url(asset.url))
-        url = "N/A" if not asset else asset.url
-        rows.append(
-            [
-                version_str,
-                release.version,
-                release.published_at.strftime("%Y-%m-%d"),
-                url,
-            ]
-        )
+        version_name = str(replace(release.version, csharp_enabled=csharp))
+        rows.append((version_name, release.tag, release.published_at, asset))
 
-    print_table(["Version", "Tag", "Published", "Download URL"], rows)
+    if output_json:
+        items = [
+            {
+                "version": name,
+                "tag": tag,
+                "published": published.isoformat(),
+                "url": asset.url if asset else None,
+            }
+            for name, tag, published, asset in rows
+        ]
+        typer.echo(json.dumps({"releases": items}, indent=2))
+        return
+
+    print_table(
+        ["Version", "Tag", "Published", "Download URL"],
+        [
+            [name, tag, f"{published:%Y-%m-%d}", asset.url if asset else "N/A"]
+            for name, tag, published, asset in rows
+        ],
+    )
 
 
 @engine_app.command("install")
 def install(
-    tag: str = typer.Argument(..., help="A release tag (e.g., '4.2.3-stable')."),
+    version: str = typer.Argument(
+        ..., help="A version, e.g. '4.3', '4.4-rc2' or '4.3.stable.mono'."
+    ),
     csharp: bool = typer.Option(False, "--csharp", help="Install the C# variant."),
     path: str | None = typer.Option(None, "--path", help="Custom installation path."),
 ) -> None:
     """Install a specific Godot engine version."""
-    from godotkit.engine import DownloadError, ExtractError
-
-    base_version = tag.split("-")[0]
-    typer.echo(f"Searching for Godot {base_version}...")
-
-    with GodotFetcher() as fetcher:
-        for refresh in (False, True):
-            fetcher.fetch_releases(stable_only=False, refresh_cache=refresh)
-            try:
-                download_url = fetcher.get_download_url(tag, mono=csharp)
-                break
-            except ValueError:
-                pass
-        else:
-            print_error(f"Couldn't find Godot {tag}.")
-
-    typer.echo(f"Downloading from: {download_url}")
-
-    install_path = Path(
-        path or (paths.versions_dir() / str(GodotVersion.from_url(download_url)))
-    ).resolve()
+    target = _parse_version(version)
+    if csharp:
+        target = replace(target, csharp_enabled=True)
 
     if path:
         print_warning("Custom installation paths are not tracked.")
+    typer.echo(f"Installing Godot {target}...")
 
     try:
-        utils.download_and_extract(download_url, install_path)
-    except (DownloadError, ExtractError) as e:
-        print_error(f"{e}")
-    except Exception as e:
-        print_error(f"{type(e).__name__}: {e}")
+        install_path = engines.install(
+            target, target=Path(path).resolve() if path else None
+        )
+    except ReleaseNotFoundError:
+        print_error(f"Couldn't find Godot {target}.")
+    except AssetNotFoundError:
+        print_error(f"Godot {target} has no build for this computer.")
+    except FileExistsError:
+        print_error(f"Godot {target} is already installed.")
+    except (GodotkitError, OSError) as e:
+        print_error(f"Couldn't install Godot {target}: {e}")
 
-    print_success("Installation complete.")
+    print_success(f"Installed Godot {target} to {install_path}.")
 
 
 @engine_app.command("default")
@@ -230,16 +227,12 @@ def engine_default(
             typer.echo("No default engine set.")
         return
 
-    try:
-        parsed = str(GodotVersion.parse(version))
-    except ValueError:
-        print_error(f"Invalid version: {version}")
-
-    versions = engines.list_installed()
-    if parsed not in versions:
+    name = str(_parse_version(version))
+    engine_path = engines.list_installed().get(name)
+    if not engine_path:
         print_error(
-            f"Godot {parsed} isn't installed. Install it with: gogo engine install <tag>"
+            f"Godot {name} isn't installed. Install it with: gogo engine install {name}"
         )
 
-    engines.set_default(paths.versions_dir() / parsed)
-    print_success(f"Default engine set to {parsed}.")
+    engines.set_default(engine_path)
+    print_success(f"Default engine set to {name}.")

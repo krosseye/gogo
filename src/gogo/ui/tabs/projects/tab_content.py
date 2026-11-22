@@ -1,12 +1,12 @@
 import os
 import sys
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
 from godotkit import project as gdk_project
 from godotkit.common import clone as git_clone
 from godotkit.common import git_installed
+from godotkit.engine import GodotVersion
+from godotkit.project import ProjectMetadata, VersionFileError
 from kq_icon_engine import IconStyle, KQIcon
 from PySide6.QtCore import QFile, QSize, Qt
 from PySide6.QtGui import (
@@ -206,10 +206,19 @@ class ProjectsTabContent(QFrame):
         """Reads the saved project list and populates the list view."""
         self.project_list_view.clear_projects()
 
+        broken = []
         for entry in sorted(projects.load(), key=self._last_activity, reverse=True):
-            if entry.project_file.exists():
+            if not entry.project_file.exists():
+                continue
+            try:
                 project = gdk_project.GodotProject(entry.project_file)
-                self.project_list_view.add_project(project)
+            except VersionFileError as e:
+                broken.append((entry.project_file, e))
+                continue
+            self.project_list_view.add_project(project)
+
+        if broken:
+            self._offer_pin_repair(broken)
 
     def create_new_project(self):
         dialog = CreateProjectDialog(self.load_projects, self)
@@ -226,17 +235,17 @@ class ProjectsTabContent(QFrame):
                 )
                 return
 
-            _project = gdk_project.parse.read(Path(project_file))
-            version_file = Path(project_file).parent / ".godot-version"
-            pinned = version_file.read_text().strip() if version_file.exists() else None
+            project_path = Path(project_file).resolve()
+            _project = gdk_project.parse.read(project_path)
 
-            selected_version_name = self._select_engine_version(_project, pinned)
+            selected_version_name = self._select_engine_version(_project)
             if not selected_version_name:
                 return
 
-            project_path_str = str(Path(project_file).resolve())
-            projects.add(Path(project_path_str))
-            self._write_project_engine_version(project_path_str, selected_version_name)
+            projects.add(project_path)
+            gdk_project.parse.set_engine_version(
+                project_path, GodotVersion.parse(selected_version_name)
+            )
             self.load_projects()
 
         except Exception as e:
@@ -244,27 +253,36 @@ class ProjectsTabContent(QFrame):
                 self, "Import Failed", f"Couldn't import the project.\n\n{e}"
             )
 
-    def _select_engine_version(
-        self, project_info: Mapping[str, Any], pinned: str | None
-    ) -> str | None:
+    def _select_engine_version(self, project_info: ProjectMetadata) -> str | None:
         lines = ["Choose the engine version to use:"]
+        pinned = project_info.get("engine_version")
         if pinned:
-            lines.append(f"Pinned version (.godot-version): {pinned}")
-        requested = project_info.get("engine_version")
-        if requested:
-            lines.append(f"Requested version: {requested}")
+            lines.append(f"Pinned version (.godot-version): {pinned.display_name}")
         if compat := project_info.get("compatibility_version"):
-            lines.append(f"Compatibility version: {compat}")
+            lines.append(f"Made with Godot {compat.display_name}")
         return choose_engine_version(
             self,
             "Choose Engine Version",
             "\n\n".join(lines),
-            preselect=pinned or requested,
+            preselect=pinned,
         )
 
-    def _write_project_engine_version(self, project_path: str, engine_version: str):
-        """Write the chosen version to .godot-version next to project.godot."""
-        (Path(project_path).parent / ".godot-version").write_text(engine_version)
+    def _offer_pin_repair(self, broken: list[tuple[Path, VersionFileError]]) -> None:
+        """Projects with an unreadable .godot-version: offer to clear their pins."""
+        details = "\n".join(f"{path.parent.name}: {error}" for path, error in broken)
+        reply = QMessageBox.warning(
+            self,
+            "Broken Engine Pins",
+            f"{len(broken)} project(s) have an unreadable .godot-version file and "
+            "aren't shown. Clear their pinned engine version? You can pick a "
+            f"version again when you open them.\n\n{details}",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        for path, _ in broken:
+            gdk_project.parse.update(path, {"engine_version": None})
+        self.load_projects()
 
     def import_project(self):
         project_file, _ = QFileDialog.getOpenFileName(
@@ -337,7 +355,7 @@ class ProjectsTabContent(QFrame):
         reply = QMessageBox.question(
             self,
             "Forget Project",
-            f"Remove {project_item.project.name} from the list?\n\nIts files will stay on disk.",
+            f"Remove {project_item.project.name or projects.UNNAMED_PROJECT} from the list?\n\nIts files will stay on disk.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )

@@ -11,7 +11,7 @@ class Worker(QThread):
     `cancelled`. Signals are delivered on the UI thread.
     """
 
-    progress = Signal(int, int)  # done, total (0 if unknown)
+    progress = Signal(str, int, int)  # phase, done, total (0 if unknown)
     succeeded = Signal(object)
     failed = Signal(str)
 

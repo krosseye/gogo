@@ -10,6 +10,7 @@ from gogo.core import paths
 logger = logging.getLogger(__name__)
 
 PROJECT_FILE = "project.godot"
+UNNAMED_PROJECT = "Unnamed Project"
 
 
 @dataclass

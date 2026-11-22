@@ -1,4 +1,3 @@
-from godotkit import project as gdk_project
 from godotkit.engine import GodotVersion
 from godotkit.project import GodotProject
 from kq_icon_engine import FillMode, IconStyle, KQCustomIcon, KQIcon
@@ -98,9 +97,9 @@ class ProjectListItem(QWidget):
         details_layout.setContentsMargins(0, 0, 0, 0)
         details_layout.setSpacing(2)
 
-        self.name_label = QLabel(f"<h3>{self.project.name}</h3>")
+        self.name_label = QLabel(f"<h3>{self._name}</h3>")
 
-        self.desc_label = SlidingLabel(self.project.description)
+        self.desc_label = SlidingLabel(self.project.description or "")
         self.desc_label.set_italic(False)
         self.desc_label.set_max_width(self.width() / 2 if self.width() > 0 else 200)
         self.desc_label.setSizePolicy(
@@ -137,11 +136,7 @@ class ProjectListItem(QWidget):
         meta_layout.setContentsMargins(0, 0, 0, 0)
         meta_layout.setSpacing(4)
 
-        version_string = str(self.project.engine_version)
-
-        version_pixmap = IconGenerator.get_version_pin(version_string)
-
-        self.version_emblem = EmblemWidget(version_string, version_pixmap)
+        self.version_emblem = EmblemWidget(*self._version_badge())
         self.version_emblem.setToolTip("Preferred engine version")
         meta_layout.addWidget(self.version_emblem)
 
@@ -167,15 +162,12 @@ class ProjectListItem(QWidget):
     def start_project(self):
         """Open the project in its engine, offering to fix a missing engine."""
         engine_version = self.project.engine_version
-        version = str(engine_version)
-        binary_path = installed_binary(version) if engine_version else None
+        binary_path = installed_binary(engine_version) if engine_version else None
         if not binary_path:
             self._resolve_missing_engine(engine_version)
             return
         try:
-            launcher.start_project(
-                binary_path, self.project.file_path, self.project.name
-            )
+            launcher.start_project(binary_path, self.project.file_path, self._name)
         except Exception as e:
             QMessageBox.warning(self, "Cannot Open Project", str(e))
             return
@@ -183,7 +175,7 @@ class ProjectListItem(QWidget):
         projects.mark_opened(self.project.dir_path)
 
         StatsManager.track_project_launch()
-        StatsManager.track_engine_usage(version)
+        StatsManager.track_engine_usage(str(engine_version))
 
         instance = QApplication.instance()
         if not instance:
@@ -201,13 +193,15 @@ class ProjectListItem(QWidget):
         box.setWindowTitle("Engine Not Installed")
         if engine_version:
             box.setText(
-                f"{self.project.name} uses Godot {engine_version}, which isn't installed."
+                f"{self._name} uses Godot {engine_version.display_name}, "
+                "which isn't installed."
             )
             install_btn = box.addButton(
-                f"Install Godot {engine_version}", QMessageBox.ButtonRole.AcceptRole
+                f"Install Godot {engine_version.display_name}",
+                QMessageBox.ButtonRole.AcceptRole,
             )
         else:
-            box.setText(f"{self.project.name} has no engine version set.")
+            box.setText(f"{self._name} has no engine version set.")
             install_btn = None
         other_btn = (
             box.addButton("Use Another Version...", QMessageBox.ButtonRole.ActionRole)
@@ -223,14 +217,12 @@ class ProjectListItem(QWidget):
                 if installed_ok:
                     self.start_project()
 
-            install_engine(
-                self, str(engine_version), None, after_install, version=engine_version
-            )
+            install_engine(self, engine_version, after_install)
         elif box.clickedButton() is other_btn:
             choice = choose_engine_version(
                 self.window(),
                 "Choose Engine Version",
-                f"Open {self.project.name} with:",
+                f"Open {self._name} with:",
             )
             if choice:
                 self.project.engine_version = GodotVersion.parse(choice)
@@ -295,16 +287,17 @@ class ProjectListItem(QWidget):
     def _show_project_properties(self):
         dialog = ProjectPropertiesDialog(self.project, self)
         if dialog.exec():
-            gdk_project.parse.update(self.project.file_path, dialog.metadata)
-            self.project = gdk_project.GodotProject(self.project.file_path)
+            self.project.update(dialog.metadata)
             self._refresh_ui()
 
+    def _version_badge(self) -> tuple[str, QPixmap]:
+        """Text and icon of the engine version badge."""
+        version = self.project.engine_version
+        text = version.display_name if version else "None"
+        return text, IconGenerator.get_version_pin(str(version))
+
     def _refresh_meta(self):
-        version_string = str(self.project.engine_version)
-
-        version_pixmap = IconGenerator.get_version_pin(version_string)
-        self.version_emblem.set_content(version_string, version_pixmap)
-
+        self.version_emblem.set_content(*self._version_badge())
         self._sync_fav_button()
 
     def _sync_fav_button(self):
@@ -314,11 +307,15 @@ class ProjectListItem(QWidget):
         self.fav_button.setAccessibleName(text)
 
     def _refresh_ui(self):
-        self.name_label.setText(f"<h3>{self.project.name}</h3>")
-        self.desc_label.setText(self.project.description)
+        self.name_label.setText(f"<h3>{self._name}</h3>")
+        self.desc_label.setText(self.project.description or "")
         self._set_icon_label(self.icon_label)
 
         self._refresh_meta()
+
+    @property
+    def _name(self) -> str:
+        return self.project.name or projects.UNNAMED_PROJECT
 
     def _show_disk_usage(self):
         dialog = ProjectDiskUsageDialog(self.project.file_path.parent)

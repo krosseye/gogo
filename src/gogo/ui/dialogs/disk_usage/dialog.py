@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gogo.core.projects import UNNAMED_PROJECT
 from gogo.ui.components.elided_label import ElidedLabel
 from gogo.ui.graphics.icon_generator import IconGenerator
 
@@ -42,7 +43,7 @@ class ProjectDiskUsageDialog(QDialog):
             raise ValueError("Invalid Godot project path. No project.godot found.")
 
         project_config = read_project_config(config_path)
-        self._project_name = project_config.get("name", "Unknown Project")
+        self._project_name = project_config.get("name") or UNNAMED_PROJECT
 
         icon_path = project_config.get("icon_path", "")
         self.project_icon = (

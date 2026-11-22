@@ -1,13 +1,9 @@
 import json
 from datetime import datetime, timedelta
 
-from godotkit.engine import (
-    GodotFetcher,
-    detect_architecture,
-    detect_platform,
-)
+from godotkit.engine import detect_architecture, detect_platform
 
-from gogo.core import paths
+from gogo.core import engines, paths
 from gogo.core.constants import (
     ALL_RELEASES_CACHE_LIFETIME,
     STABLE_RELEASES_CACHE_LIFETIME,
@@ -67,12 +63,14 @@ class GodotReleasesController:
     ) -> list[dict]:
         """Fetch releases from the network as JSON-ready dicts (blocking)."""
         mono = variant.startswith(".NET")
-        results = GodotFetcher().fetch_releases(
-            stable_only=channel == "Stable",
-            sort_by=sort_by.lower(),  # "Date" / "Version"
-            max_releases=limit,
-            platform_only=True,
-        )
+        with engines.fetcher() as fetcher:
+            results = fetcher.fetch_releases(
+                stable_only=channel == "Stable",
+                sort_by=sort_by.lower(),  # "Date" / "Version"
+                max_releases=limit,
+                platform=self.user_platform,
+                arch=self.user_arch,
+            )
 
         releases = []
         for release in results:
@@ -81,7 +79,7 @@ class GodotReleasesController:
                 continue
             releases.append(
                 {
-                    "version": release.version,
+                    "tag": release.tag,
                     "published_at": release.published_at.isoformat(),
                     "download_links": {
                         self.user_platform: {"url": asset.url, "size": asset.size}

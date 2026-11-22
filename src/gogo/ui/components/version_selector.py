@@ -40,29 +40,24 @@ class VersionSelector(QComboBox):
             self.setEnabled(False)
             return
 
-        items: list[VersionEntry] = []
-        for name, path in versions.items():
-            try:
-                version_obj = GodotVersion.parse(name)
-            except ValueError:
-                version_obj = GodotVersion(0, 0, 0)
-            is_default = path == default_godot_path
-            items.append(VersionEntry(name, version_obj, is_default))
-
-        items.sort(key=lambda x: x.obj, reverse=True)
-        items.sort(key=lambda x: not x.is_default)
+        items = [
+            VersionEntry(name, GodotVersion.parse(name), path == default_godot_path)
+            for name, path in versions.items()
+        ]
+        items.sort(key=lambda x: not x.is_default)  # list_installed is newest first
 
         for item in items:
-            display_name = f"{item.name} [Default]" if item.is_default else item.name
+            display_name = item.obj.display_name
+            if item.is_default:
+                display_name += " [Default]"
             icon = IconGenerator.get_version_pin(item.name, 16)
             self.addItem(icon, display_name, userData=item.name)
 
     def get_selected_version(self) -> str | None:
         return self.currentData()
 
-    def set_selected_version(self, version_name: str | GodotVersion | None) -> None:
-        version_str = str(version_name)
-        index = self.findData(version_str)
+    def set_selected_version(self, version: GodotVersion | None) -> None:
+        index = self.findData(str(version))
         if index != -1:
             self.setCurrentIndex(index)
 
@@ -71,7 +66,7 @@ def choose_engine_version(
     parent: QWidget,
     title: str,
     text: str,
-    preselect: str | GodotVersion | None = None,
+    preselect: GodotVersion | None = None,
 ) -> str | None:
     """Ask the user to pick an installed version; returns its name, or None if cancelled.
 

@@ -24,11 +24,14 @@ The CLI currently covers engines only:
 
 ```sh
 gogo engine list [--default] [--verbose] [--json]
-gogo engine browse [--all] [--csharp] [--max N] [--json]
-gogo engine install 4.3-stable [--csharp]
+gogo engine browse [--all] [--csharp] [--os OS] [--arch ARCH] [--max N] [--json]
+gogo engine install VERSION [--csharp] [--path PATH]
 gogo engine default [VERSION]
 gogo engine start [VERSION]
 ```
+
+Versions are printed as Godot writes them, e.g. `4.3.stable` or `4.4.rc2.mono`. Shorter
+forms are accepted too: `4.3`, `4.4-rc2`, `4.3 mono`.
 
 ## Third-party notices
 

@@ -7,6 +7,8 @@ from typing import Any, NamedTuple
 from godotkit.engine import GodotVersion
 from godotkit.project import GodotProject
 
+from gogo.core.projects import UNNAMED_PROJECT
+
 
 class Filter(NamedTuple):
     key: str
@@ -67,17 +69,14 @@ class ProjectSearchEngine:
 
     def _filter_by_engine(self, project: GodotProject, op: str, value: str) -> bool:
         """Filters by Godot engine version."""
-        version_file = project.file_path.parent / ".godot-version"
-        if not version_file.exists():
+        project_version = project.engine_version
+        if not project_version:
             return False
-
         try:
-            project_version_str = version_file.read_text().strip()
-            project_version = GodotVersion.parse(project_version_str)
             filter_version = GodotVersion.parse(value)
-            return self._compare(project_version, op, filter_version)
-        except Exception:
+        except ValueError:
             return False
+        return self._compare(project_version, op, filter_version)
 
     def _filter_by_tag(self, project: GodotProject, op: str, value: str) -> bool:
         """Filters by project tags."""
@@ -137,7 +136,8 @@ class ProjectSearchEngine:
 
         results = []
         for project in projects:
-            if query.term and query.term not in project.name.strip().lower():
+            name = project.name or UNNAMED_PROJECT
+            if query.term and query.term not in name.strip().lower():
                 continue
 
             if not self._apply_filters(project, query.filters):
