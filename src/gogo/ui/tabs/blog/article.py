@@ -10,12 +10,10 @@ from PySide6.QtGui import (
     QPainterPath,
     QPalette,
     QPixmap,
-    QResizeEvent,
 )
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from gogo.core.feed import RSSArticle
-from gogo.ui.components.sliding_label import SlidingLabel
 
 from .threads import ImageLoader
 
@@ -32,6 +30,8 @@ class _ArticleWidget(QWidget):
 
     IMAGE_SIZE = 176, 99
     CORNER_RADIUS = 6
+    PADDING = 8
+    SPACING = 6
     default_pixmap: QPixmap | None = None
     image_label: QLabel  # created by subclasses in _build_ui()
 
@@ -49,8 +49,23 @@ class _ArticleWidget(QWidget):
         if cls.default_pixmap is None:
             cls.default_pixmap = KQIcon("image").pixmap(int(self.IMAGE_SIZE[1] * 0.6))
 
-        self.setToolTip(self.link)
+        self.summary = (article_data.get("summary") or "").strip()
+        self.setToolTip(f"{self.summary}\n\n{self.link}" if self.summary else self.link)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setObjectName("ArticleCard")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setStyleSheet(
+            """
+            #ArticleCard {
+                background-color: palette(base);
+                border: 1px solid palette(midlight);
+                border-radius: 8px;
+            }
+            #ArticleCard:hover {
+                background-color: palette(midlight);
+            }
+            """
+        )
 
         self._build_ui()
         self._set_scaled_pixmap(cls.default_pixmap, expand=False)
@@ -64,6 +79,36 @@ class _ArticleWidget(QWidget):
 
     def _build_ui(self) -> None:
         raise NotImplementedError
+
+    def _make_text_labels(self) -> None:
+        """Title, author/date and summary, styled the same in every layout."""
+        self.title_label = QLabel(self.title)
+        title_font = self.title_label.font()
+        title_font.setBold(True)
+        self.title_label.setFont(title_font)
+
+        self.meta_label = QLabel(self._format_meta_info())
+        meta_font = self.meta_label.font()
+        if meta_font.pointSizeF() > 0:
+            meta_font.setPointSizeF(meta_font.pointSizeF() - 1)
+        self.meta_label.setFont(meta_font)
+        palette = self.meta_label.palette()
+        muted = palette.color(QPalette.ColorRole.WindowText)
+        muted.setAlpha(160)
+        palette.setColor(QPalette.ColorRole.WindowText, muted)
+        self.meta_label.setPalette(palette)
+
+        self.summary_label = QLabel(self.summary)
+        self.summary_label.setVisible(bool(self.summary))
+
+        for label in (self.title_label, self.meta_label, self.summary_label):
+            label.setTextFormat(Qt.TextFormat.PlainText)
+            label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.title_label.setWordWrap(True)
+        self.summary_label.setWordWrap(True)
+
+    def _two_lines(self, label: QLabel) -> int:
+        return label.fontMetrics().lineSpacing() * 2 + 2
 
     def _add_category_badge(self, category: str) -> None:
         """Pin a small solid badge over the thumbnail's top-left corner."""
@@ -167,27 +212,10 @@ class RSSCard(_ArticleWidget):
 
     FULL_IMAGE_WIDTH = 244
     MIN_IMAGE_WIDTH = 140
-    PADDING = 8
-    SPACING = 6
     IMAGE_SIZE = FULL_IMAGE_WIDTH, round(FULL_IMAGE_WIDTH * 9 / 16)
     default_pixmap: QPixmap | None = None
 
     def _build_ui(self) -> None:
-        self.setObjectName("RSSCard")
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setStyleSheet(
-            """
-            #RSSCard {
-                background-color: palette(base);
-                border: 1px solid palette(midlight);
-                border-radius: 8px;
-            }
-            #RSSCard:hover {
-                background-color: palette(midlight);
-            }
-            """
-        )
-
         layout = QVBoxLayout(self)
         p = self.PADDING
         layout.setContentsMargins(p, p, p, p)
@@ -198,41 +226,10 @@ class RSSCard(_ArticleWidget):
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.image_label)
 
-        self.title_label = QLabel(self.title)
-        self.title_label.setTextFormat(Qt.TextFormat.PlainText)
-        self.title_label.setWordWrap(True)
-        title_font = self.title_label.font()
-        title_font.setBold(True)
-        self.title_label.setFont(title_font)
-        self.title_label.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-        )
+        self._make_text_labels()
         layout.addWidget(self.title_label)
-
-        self.meta_label = QLabel(self._format_meta_info())
-        self.meta_label.setTextFormat(Qt.TextFormat.PlainText)
-        meta_font = self.meta_label.font()
-        if meta_font.pointSizeF() > 0:
-            meta_font.setPointSizeF(meta_font.pointSizeF() - 1)
-        self.meta_label.setFont(meta_font)
-        palette = self.meta_label.palette()
-        muted = palette.color(QPalette.ColorRole.WindowText)
-        muted.setAlpha(160)
-        palette.setColor(QPalette.ColorRole.WindowText, muted)
-        self.meta_label.setPalette(palette)
         layout.addWidget(self.meta_label)
-
-        summary = (self.article_data.get("summary") or "").strip()
-        self.summary_label = QLabel(summary)
-        self.summary_label.setTextFormat(Qt.TextFormat.PlainText)
-        self.summary_label.setWordWrap(True)
-        self.summary_label.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-        )
         layout.addWidget(self.summary_label)
-        self._has_summary = bool(summary)
-
-        self.setToolTip(f"{summary}\n\n{self.link}" if summary else self.link)
 
         self.apply_size(
             self.FULL_IMAGE_WIDTH, self.natural_height(self.FULL_IMAGE_WIDTH)
@@ -243,17 +240,17 @@ class RSSCard(_ArticleWidget):
         return round(image_width * 9 / 16)
 
     def _title_height(self, image_width: int) -> int:
-        return self.title_label.fontMetrics().lineSpacing() * 2 + 2
+        return self._two_lines(self.title_label)
 
     def _summary_height(self, image_width: int) -> int:
         line = self.summary_label.fontMetrics().lineSpacing()
         needed = self.summary_label.heightForWidth(image_width)
         if needed <= 0:
             needed = line + 2
-        return min(needed, line * 2 + 2)
+        return min(needed, self._two_lines(self.summary_label))
 
     def _summary_shown(self, image_width: int) -> bool:
-        return self._has_summary and image_width >= self.FULL_IMAGE_WIDTH
+        return bool(self.summary) and image_width >= self.FULL_IMAGE_WIDTH
 
     def natural_height(self, image_width: int) -> int:
         """Height this card needs for a given thumbnail width (no layout side effects)."""
@@ -285,50 +282,28 @@ class RSSCard(_ArticleWidget):
 
 
 class RSSItem(_ArticleWidget):
-    """Horizontal row (thumbnail left, text right) for the vertical Older list."""
+    """Horizontal card (thumbnail left, text right) for the vertical Older list."""
 
     IMAGE_SIZE = 176, 99
     default_pixmap: QPixmap | None = None
 
     def _build_ui(self) -> None:
-        main_layout = QHBoxLayout(self)
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(12)
+        layout = QHBoxLayout(self)
+        p = self.PADDING
+        layout.setContentsMargins(p, p, p, p)
+        layout.setSpacing(12)
 
-        self._setup_image_section(main_layout)
-        self._setup_content_section(main_layout)
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        if hasattr(self, "summary_label"):
-            self.summary_label.set_max_width(int(self.width() * 0.5))
-
-    def _setup_image_section(self, main_layout):
         self.image_label = QLabel()
         self.image_label.setFixedSize(*self.IMAGE_SIZE)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(self.image_label, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.image_label, 0, Qt.AlignmentFlag.AlignTop)
 
-    def _setup_content_section(self, main_layout):
-        content_layout = QVBoxLayout()
-        content_layout.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-        )
-
-        self.title_label = QLabel(f"<h3>{self.title}</h3>")
-        self.title_label.setWordWrap(True)
-
-        self.meta_label = QLabel(self._format_meta_info())
-
-        summary = self.article_data["summary"]
-        self.summary_label = SlidingLabel(summary)
-        self.summary_label.set_max_width(self.width() // 2 if self.width() > 0 else 200)
-        self.summary_label.setSizePolicy(
-            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
-        )
-
-        content_layout.addWidget(self.title_label, 1)
-        content_layout.addWidget(self.meta_label, 0)
-        content_layout.addWidget(self.summary_label, 1)
-
-        main_layout.addLayout(content_layout, 1)
+        self._make_text_labels()
+        self.summary_label.setMaximumHeight(self._two_lines(self.summary_label))
+        text = QVBoxLayout()
+        text.setSpacing(self.SPACING)
+        text.setAlignment(Qt.AlignmentFlag.AlignTop)
+        text.addWidget(self.title_label)
+        text.addWidget(self.meta_label)
+        text.addWidget(self.summary_label)
+        layout.addLayout(text, 1)

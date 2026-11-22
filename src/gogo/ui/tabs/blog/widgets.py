@@ -8,8 +8,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
@@ -59,7 +57,7 @@ class BlogTabContent(QWidget):
     Tab widget for displaying Godot Engine RSS feed articles."""
 
     RECENT_DAYS = 30
-    OLDER_MIN_HEIGHT = 110
+    OLDER_MIN_HEIGHT = 124
     CARD_STEP = 8
 
     def __init__(self, parent=None) -> None:
@@ -111,10 +109,21 @@ class BlogTabContent(QWidget):
         older_layout.setSpacing(4)
 
         self.older_label = QLabel("<h3>Older</h3>")
-        self.older_list_widget = self._create_list_widget()
+        self.older_scroll = QScrollArea()
+        self.older_scroll.setWidgetResizable(True)
+        self.older_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.older_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.older_scroll.setMinimumHeight(self.OLDER_MIN_HEIGHT)
+        self.older_content = QWidget()
+        self.older_rows_layout = QVBoxLayout(self.older_content)
+        self.older_rows_layout.setContentsMargins(0, 0, 6, 0)  # clear of the scrollbar
+        self.older_rows_layout.setSpacing(self.recent_cards_layout.spacing())
+        self.older_scroll.setWidget(self.older_content)
 
         older_layout.addWidget(self.older_label)
-        older_layout.addWidget(self.older_list_widget, 1)
+        older_layout.addWidget(self.older_scroll, 1)
 
         self.lists_layout.addWidget(self.recent_section, 0)
         self.lists_layout.addWidget(self.older_section, 1)
@@ -136,16 +145,6 @@ class BlogTabContent(QWidget):
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._fit_recent_strip()
-
-    def _create_list_widget(self) -> QListWidget:
-        list_widget = QListWidget()
-        list_widget.setVerticalScrollMode(QListWidget.ScrollMode.ScrollPerPixel)
-        list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        list_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        list_widget.setMinimumHeight(self.OLDER_MIN_HEIGHT)
-        return list_widget
 
     def _load_rss_feed(self):
         self.feed_fetcher = RSSFetcherThread(self.feed_cache_file)
@@ -217,7 +216,7 @@ class BlogTabContent(QWidget):
                 self.lists_layout.spacing()
                 + self.older_label.sizeHint().height()
                 + 4
-                + self.older_list_widget.minimumHeight()
+                + self.older_scroll.minimumHeight()
             )
         available = self.height() - used
 
@@ -238,21 +237,21 @@ class BlogTabContent(QWidget):
         self.recent_scroll.setFixedHeight(height + scrollbar_room)
 
     def _populate_older(self, articles: list):
-        self.older_list_widget.clear()
+        while self.older_rows_layout.count():
+            item = self.older_rows_layout.takeAt(0)
+            if item and (widget := item.widget()):
+                widget.deleteLater()
+
         self._has_older = bool(articles)
         self.older_section.setVisible(self._has_older)
 
         for data in articles:
-            item_widget = RSSItem(
-                article_data=data,
-                image_cache_path=self.image_cache_path,
-            )
-            item_widget.article_clicked.connect(
+            row = RSSItem(article_data=data, image_cache_path=self.image_cache_path)
+            row.article_clicked.connect(
                 lambda link: logger.info("Opened article: %s", link)
             )
-            list_item = QListWidgetItem(self.older_list_widget)
-            self.older_list_widget.setItemWidget(list_item, item_widget)
-            list_item.setSizeHint(item_widget.sizeHint())
+            self.older_rows_layout.addWidget(row)
+        self.older_rows_layout.addStretch(1)
 
     def _on_feed_failed(self, error_message: str):
         logger.error("Feed loading failed: %s", error_message)
